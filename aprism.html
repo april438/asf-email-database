@@ -169,6 +169,7 @@ tbody td.right{text-align:right}
 .pill-thought,.pill-leadership{background:rgba(232,67,147,.15);color:var(--rose)}
 .pill-other{background:rgba(255,255,255,.07);color:var(--mist)}
 .repeat-tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:rgba(240,180,41,.15);color:var(--gold);margin-left:6px}
+.send-badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:rgba(0,200,150,.12);color:var(--green);margin-left:6px}
 .month-link{color:var(--cyan);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 
 @media(max-width:800px){
@@ -227,6 +228,7 @@ tbody td.right{text-align:right}
   <div class="nav-item" data-tab="plan" onclick="goTab('plan')"><span class="nav-icon">◎</span>Plan My Month</div>
   <div class="nav-item" data-tab="discover" onclick="goTab('discover')"><span class="nav-icon">⌕</span>Discover Emails</div>
   <div class="nav-item" data-tab="top" onclick="goTab('top')"><span class="nav-icon">★</span>Top Performers</div>
+  <div class="nav-item" data-tab="overlooked" onclick="goTab('overlooked')"><span class="nav-icon">◇</span>Overlooked</div>
   <div class="nav-item" data-tab="monthly" onclick="goTab('monthly')"><span class="nav-icon">▤</span>Monthly Overview</div>
   <div class="nav-label" style="margin-top:16px">Tools</div>
   <div class="nav-item" data-tab="update" onclick="goTab('update')"><span class="nav-icon">↑</span>Update Month</div>
@@ -334,6 +336,28 @@ tbody td.right{text-align:right}
     <select id="top-month-filter" onchange="renderTop()"><option value="">All Months</option></select>
   </div>
   <div class="stars-grid" id="stars-grid"></div>
+</div>
+
+<!-- ══════ OVERLOOKED ══════ -->
+<div class="page" id="page-overlooked">
+  <div class="page-heading">Overlooked Emails</div>
+  <div class="page-sub">High performers sent only a few times — hidden gems worth revisiting</div>
+  <div class="filter-bar">
+    <select id="ol-metric" onchange="renderOverlooked()">
+      <option value="okupdrs">By OKUPDRs</option>
+      <option value="closes">By Closes</option>
+      <option value="sets">By Demo Sets</option>
+    </select>
+    <select id="ol-maxsent" onchange="renderOverlooked()">
+      <option value="1">Sent exactly once</option>
+      <option value="2">Sent ≤ 2×</option>
+      <option value="3" selected>Sent ≤ 3×</option>
+      <option value="5">Sent ≤ 5×</option>
+    </select>
+    <select id="ol-year" onchange="renderOverlooked()"><option value="">All Years</option></select>
+    <div class="filter-count" id="ol-count"></div>
+  </div>
+  <div class="stars-grid" id="ol-grid"></div>
 </div>
 
 <!-- ══════ MONTHLY OVERVIEW ══════ -->
@@ -542,6 +566,7 @@ function renderCurrentTab() {
   else if (currentTab === 'plan') renderPlan();
   else if (currentTab === 'discover') { initDiscoverFilters(); renderDiscover(); }
   else if (currentTab === 'top') { initTopFilters(); renderTop(); }
+  else if (currentTab === 'overlooked') { initOverlookedFilters(); renderOverlooked(); }
   else if (currentTab === 'monthly') { initMonthlyFilters(); renderMonthly(); }
 }
 
@@ -832,6 +857,70 @@ function renderTop() {
       </div>
     </div>
   `).join('') || `<div class="empty" style="grid-column:1/-1"><h3>No results</h3></div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// OVERLOOKED
+// ═══════════════════════════════════════════════════
+function getSubjectSendCount() {
+  const map = {};
+  for (const e of C.emails) {
+    const k = (e.subject || '').trim().toLowerCase();
+    if (!k) continue;
+    map[k] = (map[k] || 0) + 1;
+  }
+  return map;
+}
+
+function initOverlookedFilters() {
+  const yf = document.getElementById('ol-year');
+  if (yf.options.length > 1) return;
+  const years = [...new Set(C.emails.map(e => e.year).filter(Boolean))].sort();
+  yf.innerHTML = '<option value="">All Years</option>' + years.map(y => `<option value="${y}">${y}</option>`).join('');
+}
+
+function renderOverlooked() {
+  initOverlookedFilters();
+  const metric = document.getElementById('ol-metric')?.value || 'okupdrs';
+  const maxSent = parseInt(document.getElementById('ol-maxsent')?.value || '3');
+  const year = document.getElementById('ol-year')?.value;
+  const sendCount = getSubjectSendCount();
+
+  // For each unique subject sent <= maxSent times, keep the best-performing send
+  const bestBySubject = {};
+  for (const e of C.emails) {
+    const k = (e.subject || '').trim().toLowerCase();
+    if (!k) continue;
+    if (sendCount[k] > maxSent) continue;
+    const hasPerfSignal = (e.okupdrs > 0) || (e.sets > 0) || (e.closes > 0);
+    if (!hasPerfSignal) continue;
+    if (year && String(e.year) !== year) continue;
+    if (!bestBySubject[k] || (e[metric] || 0) > (bestBySubject[k][metric] || 0)) {
+      bestBySubject[k] = e;
+    }
+  }
+
+  let emails = Object.values(bestBySubject);
+  emails.sort((a, b) => (b[metric] || 0) - (a[metric] || 0));
+
+  document.getElementById('ol-count').textContent = `${emails.length} overlooked emails`;
+
+  document.getElementById('ol-grid').innerHTML = emails.slice(0, 48).map((e, i) => {
+    const cnt = sendCount[(e.subject || '').trim().toLowerCase()] || 1;
+    const sentLabel = cnt === 1 ? 'sent once' : `sent ${cnt}×`;
+    return `
+    <div class="star-card" onclick="window.open('${e.url || '#'}','_blank')">
+      <div class="star-card-rank">#${i + 1}</div>
+      <div class="star-card-month">${e.month || e.monthKey || ''}</div>
+      <div class="star-card-subject">${e.subject || ''}<span class="send-badge">${sentLabel}</span></div>
+      <div class="star-card-stats">
+        <div class="star-stat"><strong>${e.okupdrs ?? '—'}</strong> OKUPDRs</div>
+        <div class="star-stat"><strong>${e.sets ?? '—'}</strong> Sets</div>
+        <div class="star-stat"><strong>${e.closes ?? '—'}</strong> Closes</div>
+        <div class="star-stat"><strong>${e.openRate || '—'}</strong> Open</div>
+      </div>
+    </div>`;
+  }).join('') || `<div class="empty" style="grid-column:1/-1;padding:40px;text-align:center"><h3 style="color:var(--mist)">No overlooked emails found</h3><p style="color:var(--ink4);margin-top:8px;font-size:12px">Try increasing the send count limit or selecting a different metric</p></div>`;
 }
 
 // ═══════════════════════════════════════════════════
