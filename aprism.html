@@ -364,6 +364,18 @@ tbody td.right{text-align:right}
         <button class="btn btn-outline" onclick="document.getElementById('update-preview').style.display='none'">Cancel</button>
       </div>
     </div>
+
+    <div id="update-success" style="display:none;margin-top:16px">
+      <div style="background:rgba(0,200,150,.1);border:1px solid var(--green);border-radius:var(--r2);padding:16px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="font-size:22px;color:var(--green)">✓</span>
+        <div style="flex:1;min-width:160px">
+          <div id="update-success-msg" style="color:var(--green);font-family:'Syne',sans-serif;font-weight:700;font-size:14px"></div>
+          <div style="font-size:11px;color:var(--mist);margin-top:3px">Saved to your browser database. Visible across all tabs.</div>
+        </div>
+        <button class="btn btn-outline" style="font-size:11px" onclick="resetUpdateZone()">Upload Another Month</button>
+      </div>
+    </div>
+
     <div class="divider"></div>
     <div class="section-title">Instructions</div>
     <div style="font-size:11.5px;color:var(--mist);line-height:1.8">
@@ -990,20 +1002,56 @@ async function saveUpdate() {
   if (!updateData?.length) return;
   const mk = updateData[0].monthKey;
   if (!mk) { toast('Could not detect month key', 'err'); return; }
-  // Delete existing month
-  await dbDeleteByMonthKey(mk);
-  await db.transaction('months','readwrite').objectStore('months').delete(mk);
-  // Insert new emails
-  const tx = db.transaction('emails', 'readwrite');
-  const store = tx.objectStore('emails');
-  for (const e of updateData) store.put(e);
-  await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
-  // Build month meta
-  const meta = buildMonthMeta(updateData);
-  await dbPut('months', meta);
-  await loadCache();
-  toast(`✓ Saved ${updateData.length} emails for ${updateData[0].month}`, 'ok');
+
+  const btn = document.querySelector('#update-preview .btn-gold');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+  try {
+    // Delete existing emails for this month
+    await dbDeleteByMonthKey(mk);
+    // Delete existing month meta (proper Promise await)
+    await new Promise((res, rej) => {
+      const tx2 = db.transaction('months', 'readwrite');
+      tx2.objectStore('months').delete(mk);
+      tx2.oncomplete = res;
+      tx2.onerror = rej;
+    });
+    // Insert new emails
+    const tx = db.transaction('emails', 'readwrite');
+    const store = tx.objectStore('emails');
+    for (const e of updateData) store.put(e);
+    await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
+    // Rebuild month meta
+    const meta = buildMonthMeta(updateData);
+    await dbPut('months', meta);
+    await loadCache();
+    renderCurrentTab();
+
+    const cnt = updateData.length;
+    const monthName = updateData[0].month;
+
+    // Show success banner
+    document.getElementById('update-preview').style.display = 'none';
+    document.getElementById('update-success-msg').textContent = `${cnt} emails saved for ${monthName}`;
+    document.getElementById('update-success').style.display = '';
+
+    toast(`✓ Saved ${cnt} emails for ${monthName}`, 'ok');
+    updateData = null;
+  } catch(err) {
+    toast('Save failed: ' + (err.message || err), 'err');
+    console.error('saveUpdate error:', err);
+    if (btn) { btn.disabled = false; btn.textContent = '💾 Save to Database'; }
+  }
+}
+
+function resetUpdateZone() {
+  document.getElementById('update-success').style.display = 'none';
   document.getElementById('update-preview').style.display = 'none';
+  const dz = document.getElementById('dz-update');
+  dz.classList.remove('loaded');
+  document.getElementById('dz-update-name').textContent = '';
+  document.getElementById('dz-update-name').style.display = 'none';
+  document.getElementById('f-update').value = '';
   updateData = null;
 }
 
