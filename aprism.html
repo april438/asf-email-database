@@ -3,44 +3,44 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>APRISM · ASF Email Intelligence</title>
+<title>Art Storefronts Ultimate Email Database · Aprism</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400&family=Roboto+Mono:wght@300;400;500&display=swap');
 
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --ink:#0a0a0f;--ink2:#1a1a24;--ink3:#2d2d3e;--ink4:#45455c;
-  --mist:#8888a0;--fog:#b8b8cc;--ghost:#e8e8f4;--white:#f8f8fe;
-  --gold:#f0b429;--gold2:#ffd166;--rose:#e84393;--cyan:#00d4ff;
+  --ink:#0e0806;--ink2:#1c1208;--ink3:#2f1f12;--ink4:#4a3828;
+  --mist:#8a7a6e;--fog:#c0a890;--ghost:#f0ede8;--white:#faf7f4;
+  --gold:#e85000;--gold2:#ff7833;--rose:#e84393;--cyan:#00d4ff;
   --green:#00c896;--red:#ff4d6a;--purple:#7c5cfc;
   --r:8px;--r2:14px;
   --shadow:0 4px 24px rgba(0,0,0,.18);
 }
-body{font-family:'DM Mono',monospace;background:var(--ink);color:var(--ghost);min-height:100vh;overflow-x:hidden}
+body{font-family:'Roboto Mono',monospace;background:radial-gradient(ellipse at 18% 0%, rgba(232,80,0,.13) 0%, transparent 52%), radial-gradient(ellipse at 85% 90%, rgba(180,55,0,.07) 0%, transparent 44%), var(--ink);color:var(--ghost);min-height:100vh;overflow-x:hidden}
 a{color:var(--cyan);text-decoration:none}
 
 /* ─── LAYOUT ─── */
-.app{display:grid;grid-template-columns:220px 1fr;grid-template-rows:60px 1fr;min-height:100vh}
-.topbar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:var(--ink2);border-bottom:1px solid var(--ink3);z-index:50;position:sticky;top:0}
+.app{display:grid;grid-template-columns:220px 1fr;grid-template-rows:64px 1fr;min-height:100vh}
+.topbar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:var(--ink2);border-bottom:1px solid var(--ink3);z-index:50;position:sticky;top:0;min-height:64px}
 .sidebar{background:var(--ink2);border-right:1px solid var(--ink3);padding:20px 0;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
 .main{overflow-y:auto;padding:24px 28px;background:var(--ink)}
 
 /* ─── LOGO ─── */
-.logo{display:flex;align-items:center;gap:10px;font-family:'Syne',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.5px}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Roboto',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.5px}
 .logo-gem{width:32px;height:32px;background:conic-gradient(from 0deg,var(--gold),var(--rose),var(--cyan),var(--gold));border-radius:50%;flex-shrink:0}
 .logo span{background:linear-gradient(135deg,var(--gold),var(--rose));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 
 /* ─── TOPBAR STATS ─── */
 .topstats{display:flex;gap:24px;font-size:11px;color:var(--mist)}
-.topstat-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--ghost);display:block;line-height:1}
+.topstat-val{font-family:'Roboto',sans-serif;font-size:18px;font-weight:700;color:var(--ghost);display:block;line-height:1}
 
 /* ─── NAV ─── */
 .nav-label{font-size:9px;letter-spacing:2px;color:var(--ink4);text-transform:uppercase;padding:12px 20px 4px}
 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:12px;cursor:pointer;color:var(--mist);transition:all .15s;border-left:2px solid transparent}
 .nav-item:hover{color:var(--ghost);background:var(--ink3)}
-.nav-item.active{color:var(--gold);border-left-color:var(--gold);background:rgba(240,180,41,.06)}
+.nav-item.active{color:var(--gold);border-left-color:var(--gold);background:rgba(232,80,0,.09)}
 .nav-icon{font-size:14px;width:18px;text-align:center}
 
 /* ─── PAGES ─── */
@@ -48,8 +48,8 @@ a{color:var(--cyan);text-decoration:none}
 .page.active{display:block}
 
 /* ─── SECTION ─── */
-.section-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mist);margin-bottom:14px}
-.page-heading{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.5px;color:var(--white);margin-bottom:4px}
+.section-title{font-family:'Roboto',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mist);margin-bottom:14px}
+.page-heading{font-family:'Roboto',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.5px;color:var(--white);margin-bottom:4px}
 .page-sub{font-size:12px;color:var(--mist);margin-bottom:24px}
 
 /* ─── KPI CARDS ─── */
@@ -60,7 +60,7 @@ a{color:var(--cyan);text-decoration:none}
 .kpi.cyan::after{background:var(--cyan)}.kpi.green::after{background:var(--green)}
 .kpi.purple::after{background:var(--purple)}.kpi.red::after{background:var(--red)}
 .kpi-label{font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--mist);margin-bottom:6px}
-.kpi-val{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;line-height:1;color:var(--white)}
+.kpi-val{font-family:'Roboto',sans-serif;font-size:28px;font-weight:800;line-height:1;color:var(--white)}
 .kpi-sub{font-size:10px;color:var(--ink4);margin-top:4px}
 
 /* ─── CHARTS ─── */
@@ -68,7 +68,7 @@ a{color:var(--cyan);text-decoration:none}
 .chart-grid.wide{grid-template-columns:1fr}
 .chart-card{background:var(--ink2);border:1px solid var(--ink3);border-radius:var(--r2);overflow:hidden}
 .chart-head{padding:14px 18px;border-bottom:1px solid var(--ink3);display:flex;align-items:center;justify-content:space-between}
-.chart-title-text{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--ghost)}
+.chart-title-text{font-family:'Roboto',sans-serif;font-size:13px;font-weight:700;color:var(--ghost)}
 .chart-sub-text{font-size:10px;color:var(--mist);margin-top:2px}
 .chart-body{padding:16px;max-height:280px}
 .chart-body canvas{max-height:248px}
@@ -77,7 +77,7 @@ a{color:var(--cyan);text-decoration:none}
 .table-wrap{background:var(--ink2);border:1px solid var(--ink3);border-radius:var(--r2);overflow:hidden;margin-bottom:20px}
 .table-scroll{overflow-x:auto;max-height:440px;overflow-y:auto}
 table{width:100%;border-collapse:collapse;font-size:11.5px}
-thead th{position:sticky;top:0;background:var(--ink3);padding:10px 14px;text-align:left;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--mist);border-bottom:1px solid var(--ink4);cursor:pointer;user-select:none;white-space:nowrap}
+thead th{position:sticky;top:0;background:var(--ink3);padding:10px 14px;text-align:left;font-family:'Roboto',sans-serif;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--mist);border-bottom:1px solid var(--ink4);cursor:pointer;user-select:none;white-space:nowrap}
 thead th:hover{color:var(--gold)}
 thead th.asc::after{content:' ↑';color:var(--gold)}
 thead th.desc::after{content:' ↓';color:var(--gold)}
@@ -89,9 +89,9 @@ tbody td.right{text-align:right}
 .no-data{text-align:center;padding:40px;color:var(--ink4);font-style:italic}
 
 /* ─── BADGES ─── */
-.badge{display:inline-flex;align-items:center;justify-content:center;min-width:36px;padding:3px 8px;border-radius:5px;font-family:'Syne',sans-serif;font-weight:700;font-size:11px}
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:36px;padding:3px 8px;border-radius:5px;font-family:'Roboto',sans-serif;font-weight:700;font-size:11px}
 .badge-0{background:rgba(255,77,106,.15);color:var(--red)}
-.badge-low{background:rgba(240,180,41,.15);color:var(--gold)}
+.badge-low{background:rgba(232,80,0,.15);color:var(--gold)}
 .badge-mid{background:rgba(0,200,150,.15);color:var(--green)}
 .badge-high{background:rgba(124,92,252,.15);color:var(--purple)}
 .badge-star{background:rgba(0,212,255,.15);color:var(--cyan)}
@@ -100,7 +100,7 @@ tbody td.right{text-align:right}
 
 /* ─── FILTER BAR ─── */
 .filter-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
-.filter-bar input,.filter-bar select{padding:8px 12px;background:var(--ink3);border:1px solid var(--ink4);border-radius:var(--r);color:var(--ghost);font-family:'DM Mono',monospace;font-size:12px;outline:none;transition:border-color .15s}
+.filter-bar input,.filter-bar select{padding:8px 12px;background:var(--ink3);border:1px solid var(--ink4);border-radius:var(--r);color:var(--ghost);font-family:'Roboto Mono',monospace;font-size:12px;outline:none;transition:border-color .15s}
 .filter-bar input:focus,.filter-bar select:focus{border-color:var(--gold)}
 .filter-bar input{flex:1;min-width:200px}
 .filter-bar input::placeholder{color:var(--ink4)}
@@ -108,7 +108,7 @@ tbody td.right{text-align:right}
 
 /* ─── MONTH PICKER (Plan My Month) ─── */
 .month-wheel{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
-.month-btn{padding:7px 14px;border-radius:20px;font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;border:1px solid var(--ink4);color:var(--mist);background:transparent;transition:all .15s}
+.month-btn{padding:7px 14px;border-radius:20px;font-size:11px;font-family:'Roboto Mono',monospace;cursor:pointer;border:1px solid var(--ink4);color:var(--mist);background:transparent;transition:all .15s}
 .month-btn:hover{border-color:var(--gold);color:var(--gold)}
 .month-btn.active{background:var(--gold);color:var(--ink);border-color:var(--gold);font-weight:600}
 
@@ -116,17 +116,17 @@ tbody td.right{text-align:right}
 .stars-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:24px}
 .star-card{background:var(--ink2);border:1px solid var(--ink3);border-radius:var(--r2);padding:16px;cursor:pointer;transition:all .2s;position:relative}
 .star-card:hover{border-color:var(--gold);transform:translateY(-2px)}
-.star-card-rank{position:absolute;top:12px;right:14px;font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--ink3)}
+.star-card-rank{position:absolute;top:12px;right:14px;font-family:'Roboto',sans-serif;font-size:20px;font-weight:800;color:var(--ink3)}
 .star-card-month{font-size:10px;letter-spacing:.8px;color:var(--mist);margin-bottom:6px;text-transform:uppercase}
 .star-card-subject{font-size:13px;color:var(--ghost);margin-bottom:10px;line-height:1.5;max-width:280px}
 .star-card-stats{display:flex;gap:10px;flex-wrap:wrap}
 .star-stat{font-size:10px;color:var(--mist)}
-.star-stat strong{color:var(--gold);font-family:'Syne',sans-serif;font-size:13px}
+.star-stat strong{color:var(--gold);font-family:'Roboto',sans-serif;font-size:13px}
 
 /* ─── UPLOAD ZONE ─── */
 .upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
 .upload-card{background:var(--ink2);border:1px solid var(--ink3);border-radius:var(--r2);padding:20px}
-.upload-card h3{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:4px;color:var(--ghost)}
+.upload-card h3{font-family:'Roboto',sans-serif;font-size:13px;font-weight:700;margin-bottom:4px;color:var(--ghost)}
 .upload-card .sub{font-size:11px;color:var(--mist);margin-bottom:14px;line-height:1.6}
 .drop-zone{border:2px dashed var(--ink4);border-radius:var(--r);padding:24px;text-align:center;cursor:pointer;transition:all .2s}
 .drop-zone:hover,.drop-zone.over{border-color:var(--gold);background:rgba(240,180,41,.04)}
@@ -136,7 +136,7 @@ tbody td.right{text-align:right}
 .dz-name{font-size:11px;color:var(--green);margin-top:6px;font-weight:600}
 
 /* ─── BUTTONS ─── */
-.btn{padding:9px 18px;border:none;border-radius:var(--r);cursor:pointer;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.5px;transition:all .15s;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.btn{padding:9px 18px;border:none;border-radius:var(--r);cursor:pointer;font-family:'Roboto',sans-serif;font-size:12px;font-weight:700;letter-spacing:.5px;transition:all .15s;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
 .btn-gold{background:var(--gold);color:var(--ink)}
 .btn-gold:hover{background:var(--gold2)}
 .btn-outline{background:transparent;border:1px solid var(--ink4);color:var(--mist)}
@@ -158,7 +158,7 @@ tbody td.right{text-align:right}
 /* ─── MISC ─── */
 .divider{height:1px;background:var(--ink3);margin:20px 0}
 .empty{text-align:center;padding:48px 24px;color:var(--mist)}
-.empty h3{font-family:'Syne',sans-serif;font-size:18px;color:var(--ghost);margin-bottom:8px}
+.empty h3{font-family:'Roboto',sans-serif;font-size:18px;color:var(--ghost);margin-bottom:8px}
 .link{color:var(--cyan);cursor:pointer}
 .link:hover{text-decoration:underline}
 .pill{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
@@ -168,7 +168,7 @@ tbody td.right{text-align:right}
 .pill-success{background:rgba(0,200,150,.15);color:var(--green)}
 .pill-thought,.pill-leadership{background:rgba(232,67,147,.15);color:var(--rose)}
 .pill-other{background:rgba(255,255,255,.07);color:var(--mist)}
-.repeat-tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:rgba(240,180,41,.15);color:var(--gold);margin-left:6px}
+.repeat-tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:rgba(232,80,0,.15);color:var(--gold);margin-left:6px}
 .send-badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:rgba(0,200,150,.12);color:var(--green);margin-left:6px}
 .month-link{color:var(--cyan);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 
@@ -183,23 +183,23 @@ tbody td.right{text-align:right}
 #login-overlay{position:fixed;inset:0;background:var(--ink);z-index:9999;display:flex;align-items:center;justify-content:center}
 #login-overlay.hidden{display:none}
 .login-box{background:var(--ink2);border:1px solid var(--ink3);border-radius:var(--r2);padding:48px 40px;width:360px;display:flex;flex-direction:column;gap:20px;box-shadow:var(--shadow)}
-.login-logo{display:flex;align-items:center;gap:10px;font-family:'Syne',sans-serif;font-weight:800;font-size:24px;letter-spacing:-.5px;justify-content:center;margin-bottom:4px}
+.login-logo{display:flex;align-items:center;gap:10px;font-family:'Roboto',sans-serif;font-weight:800;font-size:24px;letter-spacing:-.5px;justify-content:center;margin-bottom:4px}
 .login-logo .logo-gem{width:40px;height:40px;background:conic-gradient(from 0deg,var(--gold),var(--rose),var(--cyan),var(--gold));border-radius:50%;flex-shrink:0}
 .login-logo span{background:linear-gradient(135deg,var(--gold),var(--rose));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .login-sub{text-align:center;color:var(--mist);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-top:-12px}
-.login-input{background:var(--ink3);border:1px solid var(--ink4);border-radius:var(--r);padding:12px 16px;color:var(--ghost);font-family:'DM Mono',monospace;font-size:13px;width:100%;outline:none;transition:border .15s}
+.login-input{background:var(--ink3);border:1px solid var(--ink4);border-radius:var(--r);padding:12px 16px;color:var(--ghost);font-family:'Roboto Mono',monospace;font-size:13px;width:100%;outline:none;transition:border .15s}
 .login-input:focus{border-color:var(--gold)}
 .login-input::placeholder{color:var(--ink4)}
 .login-err{color:var(--red);font-size:11px;text-align:center;min-height:16px}
 /* ─── CHANGELOG ─── */
-.cl-btn{position:relative;background:none;border:1px solid var(--ink4);border-radius:var(--r);padding:6px 10px;color:var(--mist);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s}
+.cl-btn{position:relative;background:none;border:1px solid var(--ink4);border-radius:var(--r);padding:6px 10px;color:var(--mist);font-family:'Roboto Mono',monospace;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s}
 .cl-btn:hover{border-color:var(--gold);color:var(--ghost)}
-.cl-badge{position:absolute;top:-5px;right:-5px;background:var(--rose);color:#fff;font-size:9px;font-weight:700;font-family:'Syne',sans-serif;border-radius:99px;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 4px;pointer-events:none}
+.cl-badge{position:absolute;top:-5px;right:-5px;background:var(--rose);color:#fff;font-size:9px;font-weight:700;font-family:'Roboto',sans-serif;border-radius:99px;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 4px;pointer-events:none}
 .cl-badge.hidden{display:none}
-.cl-panel{position:fixed;top:68px;right:16px;width:360px;background:var(--ink2);border:1px solid var(--ink3);border-radius:var(--r2);box-shadow:0 8px 40px rgba(0,0,0,.4);z-index:200;display:none;flex-direction:column;overflow:hidden}
+.cl-panel{position:fixed;top:72px;right:16px;width:360px;background:var(--ink2);border:1px solid var(--ink3);border-radius:var(--r2);box-shadow:0 8px 40px rgba(0,0,0,.4);z-index:200;display:none;flex-direction:column;overflow:hidden}
 .cl-panel.open{display:flex}
 .cl-panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--ink3)}
-.cl-panel-title{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--ghost)}
+.cl-panel-title{font-family:'Roboto',sans-serif;font-weight:700;font-size:14px;color:var(--ghost)}
 .cl-close{background:none;border:none;color:var(--mist);font-size:18px;cursor:pointer;line-height:1;padding:0 2px}
 .cl-close:hover{color:var(--ghost)}
 .cl-list{overflow-y:auto;max-height:420px;padding:8px 0}
@@ -219,8 +219,14 @@ tbody td.right{text-align:right}
 <!-- LOGIN OVERLAY -->
 <div id="login-overlay">
   <div class="login-box">
-    <div class="login-logo"><div class="logo-gem"></div><span>APRISM</span></div>
-    <div class="login-sub">ASF Email Intelligence</div>
+    <div class="login-logo" style="flex-direction:column;align-items:center;gap:10px;margin-bottom:0">
+      <img src="logo.png" alt="ASF" style="width:88px;height:88px;object-fit:contain">
+      <div style="text-align:center">
+        <div style="font-family:'Roboto',sans-serif;font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--mist);margin-bottom:4px">Art Storefronts</div>
+        <div style="font-family:'Roboto',sans-serif;font-size:17px;font-weight:900;letter-spacing:-.3px;text-transform:uppercase;color:var(--ghost);line-height:1.2">Ultimate Email Database</div>
+        <div style="font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-top:6px">Aprism</div>
+      </div>
+    </div>
     <input id="login-pw" class="login-input" type="password" placeholder="Enter password" autocomplete="current-password">
     <button class="btn btn-gold" style="width:100%;padding:12px" onclick="doLogin()">Enter</button>
     <div id="login-err" class="login-err"></div>
@@ -231,7 +237,14 @@ tbody td.right{text-align:right}
 
 <!-- TOPBAR -->
 <header class="topbar">
-  <div class="logo"><div class="logo-gem"></div><span>APRISM</span></div>
+  <div class="logo" style="gap:12px;align-items:center">
+    <img src="logo.png" alt="ASF" style="height:40px;width:40px;object-fit:contain;flex-shrink:0">
+    <div style="display:flex;flex-direction:column;gap:0px">
+      <span style="font-family:'Roboto',sans-serif;font-size:7px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--mist);line-height:1">Art Storefronts</span>
+      <span style="font-family:'Roboto',sans-serif;font-size:12px;font-weight:900;letter-spacing:-.2px;text-transform:uppercase;color:var(--ghost);line-height:1.25">Ultimate Email Database</span>
+      <span style="font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);line-height:1;margin-top:2px">Aprism</span>
+    </div>
+  </div>
   <div class="topstats">
     <div><span class="topstat-val" id="hdr-months">—</span>months</div>
     <div><span class="topstat-val" id="hdr-emails">—</span>emails</div>
@@ -390,7 +403,7 @@ tbody td.right{text-align:right}
       <option value="5">Sent ≤ 5×</option>
     </select>
     <select id="ol-year" onchange="renderOverlooked()"><option value="">All Years</option></select>
-    <input id="ol-search" type="text" placeholder="Search subject or date…" oninput="renderOlGrid()" style="background:var(--ink3);border:1px solid var(--ink4);border-radius:var(--r);padding:7px 12px;color:var(--ghost);font-family:'DM Mono',monospace;font-size:12px;outline:none;min-width:220px;transition:border .15s" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--ink4)'">
+    <input id="ol-search" type="text" placeholder="Search subject or date…" oninput="renderOlGrid()" style="background:var(--ink3);border:1px solid var(--ink4);border-radius:var(--r);padding:7px 12px;color:var(--ghost);font-family:'Roboto Mono',monospace;font-size:12px;outline:none;min-width:220px;transition:border .15s" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--ink4)'">
     <div class="filter-count" id="ol-count"></div>
   </div>
   <div class="stars-grid" id="ol-grid"></div>
@@ -455,7 +468,7 @@ tbody td.right{text-align:right}
       <div style="background:rgba(0,200,150,.1);border:1px solid var(--green);border-radius:var(--r2);padding:16px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
         <span style="font-size:22px;color:var(--green)">✓</span>
         <div style="flex:1;min-width:160px">
-          <div id="update-success-msg" style="color:var(--green);font-family:'Syne',sans-serif;font-weight:700;font-size:14px"></div>
+          <div id="update-success-msg" style="color:var(--green);font-family:'Roboto',sans-serif;font-weight:700;font-size:14px"></div>
           <div style="font-size:11px;color:var(--mist);margin-top:3px">Saved to your browser database. Visible across all tabs.</div>
         </div>
         <button class="btn btn-outline" style="font-size:11px" onclick="resetUpdateZone()">Upload Another Month</button>
