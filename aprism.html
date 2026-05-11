@@ -355,6 +355,7 @@ tbody td.right{text-align:right}
       <option value="5">Sent ≤ 5×</option>
     </select>
     <select id="ol-year" onchange="renderOverlooked()"><option value="">All Years</option></select>
+    <input id="ol-search" type="text" placeholder="Search subject or date…" oninput="renderOlGrid()" style="background:var(--ink3);border:1px solid var(--ink4);border-radius:var(--r);padding:7px 12px;color:var(--ghost);font-family:'DM Mono',monospace;font-size:12px;outline:none;min-width:220px;transition:border .15s" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--ink4)'">
     <div class="filter-count" id="ol-count"></div>
   </div>
   <div class="stars-grid" id="ol-grid"></div>
@@ -873,6 +874,8 @@ function getSubjectSendCount() {
   return map;
 }
 
+let olFilteredEmails = [], olSendCount = {};
+
 function initOverlookedFilters() {
   const yf = document.getElementById('ol-year');
   if (yf.options.length > 1) return;
@@ -885,14 +888,14 @@ function renderOverlooked() {
   const metric = document.getElementById('ol-metric')?.value || 'okupdrs';
   const maxSent = parseInt(document.getElementById('ol-maxsent')?.value || '3');
   const year = document.getElementById('ol-year')?.value;
-  const sendCount = getSubjectSendCount();
+  olSendCount = getSubjectSendCount();
 
   // For each unique subject sent <= maxSent times, keep the best-performing send
   const bestBySubject = {};
   for (const e of C.emails) {
     const k = (e.subject || '').trim().toLowerCase();
     if (!k) continue;
-    if (sendCount[k] > maxSent) continue;
+    if (olSendCount[k] > maxSent) continue;
     const hasPerfSignal = (e.okupdrs > 0) || (e.sets > 0) || (e.closes > 0);
     if (!hasPerfSignal) continue;
     if (year && String(e.year) !== year) continue;
@@ -901,18 +904,35 @@ function renderOverlooked() {
     }
   }
 
-  let emails = Object.values(bestBySubject);
-  emails.sort((a, b) => (b[metric] || 0) - (a[metric] || 0));
+  olFilteredEmails = Object.values(bestBySubject);
+  olFilteredEmails.sort((a, b) => (b[metric] || 0) - (a[metric] || 0));
 
-  document.getElementById('ol-count').textContent = `${emails.length} overlooked emails`;
+  const searchEl = document.getElementById('ol-search');
+  if (searchEl) searchEl.value = '';
+  renderOlGrid();
+}
 
-  document.getElementById('ol-grid').innerHTML = emails.slice(0, 48).map((e, i) => {
-    const cnt = sendCount[(e.subject || '').trim().toLowerCase()] || 1;
-    const sentLabel = cnt === 1 ? 'sent once' : `sent ${cnt}×`;
+function renderOlGrid() {
+  const search = (document.getElementById('ol-search')?.value || '').trim().toLowerCase();
+  let visible = olFilteredEmails;
+  if (search) {
+    visible = visible.filter(e =>
+      (e.subject || '').toLowerCase().includes(search) ||
+      (e.date || '').toLowerCase().includes(search) ||
+      (e.month || '').toLowerCase().includes(search)
+    );
+  }
+
+  document.getElementById('ol-count').textContent =
+    search ? `${visible.length} of ${olFilteredEmails.length} overlooked emails` : `${olFilteredEmails.length} overlooked emails`;
+
+  document.getElementById('ol-grid').innerHTML = visible.map((e, i) => {
+    const cnt = olSendCount[(e.subject || '').trim().toLowerCase()] || 1;
+    const sentLabel = cnt === 1 ? 'sent once' : `sent ${cnt}\xd7`;
     return `
     <div class="star-card" onclick="window.open('${e.url || '#'}','_blank')">
       <div class="star-card-rank">#${i + 1}</div>
-      <div class="star-card-month">${e.month || e.monthKey || ''}</div>
+      <div class="star-card-month">${e.month || e.monthKey || ''} &nbsp;·&nbsp; ${e.date || ''}</div>
       <div class="star-card-subject">${e.subject || ''}<span class="send-badge">${sentLabel}</span></div>
       <div class="star-card-stats">
         <div class="star-stat"><strong>${e.okupdrs ?? '—'}</strong> OKUPDRs</div>
@@ -921,7 +941,7 @@ function renderOverlooked() {
         <div class="star-stat"><strong>${e.openRate || '—'}</strong> Open</div>
       </div>
     </div>`;
-  }).join('') || `<div class="empty" style="grid-column:1/-1;padding:40px;text-align:center"><h3 style="color:var(--mist)">No overlooked emails found</h3><p style="color:var(--ink4);margin-top:8px;font-size:12px">Try increasing the send count limit or selecting a different metric</p></div>`;
+  }).join('') || `<div class="empty" style="grid-column:1/-1;padding:40px;text-align:center"><h3 style="color:var(--mist)">No results</h3><p style="color:var(--ink4);margin-top:8px;font-size:12px">${search ? 'No emails match your search' : 'Try increasing the send count limit or selecting a different metric'}</p></div>`;
 }
 
 // ═══════════════════════════════════════════════════
