@@ -446,7 +446,7 @@ tbody td.right{text-align:right}
 // ═══════════════════════════════════════════════════
 // DATA LAYER — IndexedDB
 // ═══════════════════════════════════════════════════
-const DB_NAME = 'aprismDB', DB_VER = 1;
+const DB_NAME = 'aprismDB', DB_VER = 2;
 let db;
 
 function openDB() {
@@ -454,14 +454,15 @@ function openDB() {
     const r = indexedDB.open(DB_NAME, DB_VER);
     r.onupgradeneeded = e => {
       const d = e.target.result;
-      if (!d.objectStoreNames.contains('emails')) {
-        const s = d.createObjectStore('emails', {keyPath: 'uid', autoIncrement: true});
-        s.createIndex('monthKey', 'monthKey', {unique: false});
-        s.createIndex('year', 'year', {unique: false});
+      // Wipe existing stores on version upgrade so fresh seed data is loaded
+      if (e.oldVersion > 0) {
+        if (d.objectStoreNames.contains('emails')) d.deleteObjectStore('emails');
+        if (d.objectStoreNames.contains('months')) d.deleteObjectStore('months');
       }
-      if (!d.objectStoreNames.contains('months')) {
-        d.createObjectStore('months', {keyPath: 'monthKey'});
-      }
+      const s = d.createObjectStore('emails', {keyPath: 'uid', autoIncrement: true});
+      s.createIndex('monthKey', 'monthKey', {unique: false});
+      s.createIndex('year', 'year', {unique: false});
+      d.createObjectStore('months', {keyPath: 'monthKey'});
     };
     r.onsuccess = e => { db = e.target.result; res(db); };
     r.onerror = rej;
