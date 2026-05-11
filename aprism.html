@@ -191,6 +191,26 @@ tbody td.right{text-align:right}
 .login-input:focus{border-color:var(--gold)}
 .login-input::placeholder{color:var(--ink4)}
 .login-err{color:var(--red);font-size:11px;text-align:center;min-height:16px}
+/* ─── CHANGELOG ─── */
+.cl-btn{position:relative;background:none;border:1px solid var(--ink4);border-radius:var(--r);padding:6px 10px;color:var(--mist);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s}
+.cl-btn:hover{border-color:var(--gold);color:var(--ghost)}
+.cl-badge{position:absolute;top:-5px;right:-5px;background:var(--rose);color:#fff;font-size:9px;font-weight:700;font-family:'Syne',sans-serif;border-radius:99px;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 4px;pointer-events:none}
+.cl-badge.hidden{display:none}
+.cl-panel{position:fixed;top:68px;right:16px;width:360px;background:var(--ink2);border:1px solid var(--ink3);border-radius:var(--r2);box-shadow:0 8px 40px rgba(0,0,0,.4);z-index:200;display:none;flex-direction:column;overflow:hidden}
+.cl-panel.open{display:flex}
+.cl-panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--ink3)}
+.cl-panel-title{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--ghost)}
+.cl-close{background:none;border:none;color:var(--mist);font-size:18px;cursor:pointer;line-height:1;padding:0 2px}
+.cl-close:hover{color:var(--ghost)}
+.cl-list{overflow-y:auto;max-height:420px;padding:8px 0}
+.cl-item{padding:12px 18px;border-bottom:1px solid var(--ink3);display:flex;gap:12px}
+.cl-item:last-child{border-bottom:none}
+.cl-item.unread .cl-dot{background:var(--gold)}
+.cl-dot{width:7px;height:7px;border-radius:50%;background:var(--ink4);flex-shrink:0;margin-top:5px}
+.cl-item-date{font-size:10px;color:var(--mist);margin-bottom:3px;letter-spacing:.5px}
+.cl-item-title{font-size:12px;color:var(--ghost);font-weight:500;margin-bottom:3px}
+.cl-item-body{font-size:11px;color:var(--mist);line-height:1.5}
+
 
 </style>
 </head>
@@ -218,8 +238,23 @@ tbody td.right{text-align:right}
     <div><span class="topstat-val" id="hdr-ok">—</span>OKUPDRs</div>
     <div><span class="topstat-val" id="hdr-closes">—</span>closes</div>
   </div>
-  <button class="btn btn-outline btn-sm" onclick="goTab('update')">+ Update Month</button>
+  <div style="display:flex;align-items:center;gap:10px">
+    <button class="btn btn-outline btn-sm" onclick="goTab('update')">+ Update Month</button>
+    <button class="cl-btn" id="cl-btn" onclick="toggleChangelog()">
+      <span>&#9679; What's New</span>
+      <span class="cl-badge hidden" id="cl-badge">0</span>
+    </button>
+  </div>
 </header>
+
+<!-- CHANGELOG PANEL -->
+<div class="cl-panel" id="cl-panel">
+  <div class="cl-panel-head">
+    <div class="cl-panel-title">&#9679; What's New</div>
+    <button class="cl-close" onclick="toggleChangelog()">&#215;</button>
+  </div>
+  <div class="cl-list" id="cl-list"></div>
+</div>
 
 <!-- SIDEBAR -->
 <nav class="sidebar">
@@ -1215,6 +1250,7 @@ async function startApp() {
     await importSeedIfEmpty();
     await loadCache();
     renderCurrentTab();
+    initChangelog();
   } catch(err) {
     console.error(err);
     toast('DB error: '+err.message, 'err');
@@ -1237,6 +1273,65 @@ function doLogin() {
 
 document.getElementById('login-pw').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') doLogin();
+});
+
+
+// ═══════════════════════════════════════════════════
+// CHANGELOG
+// ═══════════════════════════════════════════════════
+const CHANGELOG = [
+  { date: '2026-05-11', title: 'Overlooked Emails — search + show all', body: 'Search by subject or date. All 600+ emails now visible — no more 50-item cap.' },
+  { date: '2026-05-11', title: '2024 & 2025 attribution refreshed', body: 'OKUPDRs, Sets, and Closes updated from the April 2026 Salesforce export.' },
+  { date: '2026-05-11', title: 'Overlooked Emails tab', body: 'Find high-performing emails sent only 1–3 times. Hidden gems worth revisiting.' },
+  { date: '2026-05-11', title: 'Password login', body: 'Page is now password-protected. Session stays active until you close the browser.' },
+  { date: '2026-05-11', title: 'Update Month — fixed + success notification', body: 'Upload was silently failing. Fixed the save logic and added a green confirmation banner.' },
+  { date: '2026-05-11', title: '2022 & 2023 attribution updated', body: 'Full year data for 2022 and 2023 loaded from the April 2026 Salesforce export.' },
+];
+const CL_STORAGE_KEY = 'aprism_cl_seen';
+
+function getSeenCount() { return parseInt(localStorage.getItem(CL_STORAGE_KEY) || '0'); }
+function setSeenCount(n) { localStorage.setItem(CL_STORAGE_KEY, String(n)); }
+
+function initChangelog() {
+  const seen = getSeenCount();
+  const unread = CHANGELOG.length - seen;
+  const badge = document.getElementById('cl-badge');
+  if (unread > 0) { badge.textContent = unread; badge.classList.remove('hidden'); }
+  else badge.classList.add('hidden');
+
+  const list = document.getElementById('cl-list');
+  list.innerHTML = CHANGELOG.map((item, i) => {
+    const isUnread = i >= seen;
+    return `<div class="cl-item${isUnread ? ' unread' : ''}">
+      <div class="cl-dot"></div>
+      <div>
+        <div class="cl-item-date">${item.date}</div>
+        <div class="cl-item-title">${item.title}</div>
+        <div class="cl-item-body">${item.body}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleChangelog() {
+  const panel = document.getElementById('cl-panel');
+  const isOpen = panel.classList.toggle('open');
+  if (isOpen) {
+    // Mark all as read
+    setSeenCount(CHANGELOG.length);
+    document.getElementById('cl-badge').classList.add('hidden');
+    // Re-render dots as all read
+    document.querySelectorAll('.cl-item').forEach(el => el.classList.remove('unread'));
+  }
+}
+
+// Close panel when clicking outside
+document.addEventListener('click', function(e) {
+  const panel = document.getElementById('cl-panel');
+  const btn = document.getElementById('cl-btn');
+  if (panel.classList.contains('open') && !panel.contains(e.target) && !btn.contains(e.target)) {
+    panel.classList.remove('open');
+  }
 });
 
 if (sessionStorage.getItem('aprism_auth') === '1') {
