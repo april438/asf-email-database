@@ -1290,39 +1290,62 @@ document.getElementById('login-pw').addEventListener('keydown', function(e) {
 
 
 // ═══════════════════════════════════════════════════
-// CHANGELOG
+// CHANGELOG — live from GitHub commits
 // ═══════════════════════════════════════════════════
-const CHANGELOG = [
-  { date: '2026-05-11', title: 'Overlooked Emails — search + show all', body: 'Search by subject or date. All 600+ emails now visible — no more 50-item cap.' },
-  { date: '2026-05-11', title: '2024 & 2025 attribution refreshed', body: 'OKUPDRs, Sets, and Closes updated from the April 2026 Salesforce export.' },
-  { date: '2026-05-11', title: 'Overlooked Emails tab', body: 'Find high-performing emails sent only 1–3 times. Hidden gems worth revisiting.' },
-  { date: '2026-05-11', title: 'Password login', body: 'Page is now password-protected. Session stays active until you close the browser.' },
-  { date: '2026-05-11', title: 'Update Month — fixed + success notification', body: 'Upload was silently failing. Fixed the save logic and added a green confirmation banner.' },
-  { date: '2026-05-11', title: '2022 & 2023 attribution updated', body: 'Full year data for 2022 and 2023 loaded from the April 2026 Salesforce export.' },
-];
-const CL_STORAGE_KEY = 'aprism_cl_seen';
+const GH_REPO = 'april438/asf-email-database';
+const CL_SEEN_KEY = 'aprism_cl_seen_sha';
 
-function getSeenCount() { return parseInt(localStorage.getItem(CL_STORAGE_KEY) || '0'); }
-function setSeenCount(n) { localStorage.setItem(CL_STORAGE_KEY, String(n)); }
+async function fetchCommits() {
+  const cached = sessionStorage.getItem('aprism_commits');
+  if (cached) return JSON.parse(cached);
+  try {
+    const res = await fetch('https://api.github.com/repos/' + GH_REPO + '/commits?per_page=25');
+    if (!res.ok) return null;
+    const data = await res.json();
+    const commits = data.map(c => ({
+      sha: c.sha.slice(0, 7),
+      fullSha: c.sha,
+      date: c.commit.author.date.slice(0, 10),
+      message: c.commit.message.split('\n')[0],
+      url: c.html_url
+    }));
+    sessionStorage.setItem('aprism_commits', JSON.stringify(commits));
+    return commits;
+  } catch(e) { return null; }
+}
 
-function initChangelog() {
-  const seen = getSeenCount();
-  const unread = CHANGELOG.length - seen;
+async function initChangelog() {
   const badge = document.getElementById('cl-badge');
-  if (unread > 0) { badge.textContent = unread; badge.classList.remove('hidden'); }
-  else badge.classList.add('hidden');
-
   const list = document.getElementById('cl-list');
-  list.innerHTML = CHANGELOG.map((item, i) => {
-    const isUnread = i >= seen;
-    return `<div class="cl-item${isUnread ? ' unread' : ''}">
-      <div class="cl-dot"></div>
-      <div>
-        <div class="cl-item-date">${item.date}</div>
-        <div class="cl-item-title">${item.title}</div>
-        <div class="cl-item-body">${item.body}</div>
-      </div>
-    </div>`;
+  list.innerHTML = '<div style="padding:20px 18px;color:var(--mist);font-size:12px">Loading updates…</div>';
+
+  const commits = await fetchCommits();
+  if (!commits || !commits.length) {
+    badge.classList.add('hidden');
+    list.innerHTML = '<div style="padding:20px 18px;color:var(--mist);font-size:12px">Could not load updates. Check connection.</div>';
+    return;
+  }
+
+  const seenSha = localStorage.getItem(CL_SEEN_KEY);
+  const seenIdx = seenSha ? commits.findIndex(c => c.fullSha === seenSha) : -1;
+  const unread = seenIdx === -1 ? commits.length : seenIdx;
+
+  if (unread > 0) {
+    badge.textContent = unread > 9 ? '9+' : unread;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+
+  list.innerHTML = commits.map((c, i) => {
+    const isUnread = seenIdx === -1 || i < seenIdx;
+    return '<div class="cl-item' + (isUnread ? ' unread' : '') + '">'
+      + '<div class="cl-dot"></div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div class="cl-item-date">' + c.date + ' &nbsp;&middot;&nbsp; '
+      + '<a href="' + c.url + '" target="_blank" style="color:var(--mist);font-size:10px;text-decoration:none" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--mist)'">' + c.sha + '</a></div>'
+      + '<div class="cl-item-title" style="word-break:break-word">' + c.message + '</div>'
+      + '</div></div>';
   }).join('');
 }
 
@@ -1330,10 +1353,12 @@ function toggleChangelog() {
   const panel = document.getElementById('cl-panel');
   const isOpen = panel.classList.toggle('open');
   if (isOpen) {
-    // Mark all as read
-    setSeenCount(CHANGELOG.length);
+    const cached = sessionStorage.getItem('aprism_commits');
+    if (cached) {
+      const commits = JSON.parse(cached);
+      if (commits.length) localStorage.setItem(CL_SEEN_KEY, commits[0].fullSha);
+    }
     document.getElementById('cl-badge').classList.add('hidden');
-    // Re-render dots as all read
     document.querySelectorAll('.cl-item').forEach(el => el.classList.remove('unread'));
   }
 }
