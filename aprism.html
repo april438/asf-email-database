@@ -1343,7 +1343,7 @@ async function initChangelog() {
       + '<div class="cl-dot"></div>'
       + '<div style="flex:1;min-width:0">'
       + '<div class="cl-item-date">' + c.date + ' &nbsp;&middot;&nbsp; '
-      + '<a href="' + c.url + '" target="_blank" style="color:var(--mist);font-size:10px;text-decoration:none" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--mist)'">' + c.sha + '</a></div>'
+      + '<a href="' + c.url + '" target="_blank" style="color:var(--mist);font-size:10px;text-decoration:none">' + c.sha + '</a></div>'
       + '<div class="cl-item-title" style="word-break:break-word">' + c.message + '</div>'
       + '</div></div>';
   }).join('');
