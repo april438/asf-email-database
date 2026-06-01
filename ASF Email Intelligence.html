@@ -1,0 +1,1810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASF Email Intelligence</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<!-- Auto-generated history seed (run generate-history.py to create/update) -->
+<script src="asf-history-data.js" onerror="window.ASF_HISTORY_SEED=null"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0e1a;--bg2:#111827;--bg3:#1e2538;--surface:#252d44;
+  --border:#2a3352;--text:#e8eaf6;--text2:#8892b0;--text3:#5a6484;
+  --accent:#7c5cfc;--accent2:#a78bfa;--accentBg:rgba(124,92,252,.12);
+  --green:#10b981;--greenBg:rgba(16,185,129,.12);
+  --red:#ef4444;--redBg:rgba(239,68,68,.12);
+  --orange:#f59e0b;--orangeBg:rgba(245,158,11,.12);
+  --blue:#3b82f6;--blueBg:rgba(59,130,246,.12);
+  --pink:#ec4899;--pinkBg:rgba(236,72,153,.12);
+  --cyan:#06b6d4;--cyanBg:rgba(6,182,212,.12);
+  --yellow:#eab308;--yellowBg:rgba(234,179,8,.12);
+  --radius:14px;--shadow:0 8px 32px rgba(0,0,0,.4);
+}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+a{color:var(--accent2);text-decoration:none}
+
+/* ── Header ── */
+.header{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700}
+.logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--cyan));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.db-stats{display:flex;gap:20px;font-size:12px;color:var(--text2)}
+.db-stat{display:flex;flex-direction:column;align-items:center;gap:2px}
+.db-stat-val{font-size:18px;font-weight:700;color:var(--text)}
+.header-actions{display:flex;gap:8px}
+
+/* ── Nav tabs ── */
+.nav{display:flex;gap:4px;padding:10px 28px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.nav-tab{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;color:var(--text2);transition:all .2s;display:flex;align-items:center;gap:7px}
+.nav-tab:hover{color:var(--text);background:var(--bg3)}
+.nav-tab.active{background:var(--accentBg);color:var(--accent2);border-color:var(--accent)}
+
+/* ── Buttons ── */
+.btn{padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{filter:brightness(1.15);transform:translateY(-1px)}
+.btn-sm{padding:6px 13px;font-size:12px;border-radius:6px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent2);background:var(--accentBg)}
+.btn-green{background:var(--green)}
+.btn-orange{background:var(--orange)}
+.btn-ghost{background:transparent;color:var(--text2);padding:7px 10px;border:none}
+.btn-ghost:hover{color:var(--text);background:var(--bg3);border-radius:6px}
+
+/* ── Page area ── */
+.page{display:none;padding:24px 28px;max-width:1600px;margin:0 auto}
+.page.active{display:block}
+
+/* ── KPI Cards ── */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px}
+.kpi-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden;cursor:default}
+.kpi-card::before{content:'';position:absolute;top:0;right:0;width:80px;height:80px;border-radius:50%;opacity:.08;transform:translate(20px,-20px)}
+.kpi-card.purple::before{background:var(--accent)}.kpi-card.green::before{background:var(--green)}
+.kpi-card.blue::before{background:var(--blue)}.kpi-card.orange::before{background:var(--orange)}
+.kpi-card.pink::before{background:var(--pink)}.kpi-card.cyan::before{background:var(--cyan)}
+.kpi-label{font-size:11px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.kpi-value{font-size:26px;font-weight:700;letter-spacing:-.5px}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:4px}
+.kpi-icon{position:absolute;top:16px;right:16px;font-size:20px;opacity:.6}
+
+/* ── Section header ── */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.section-title span{font-size:12px;font-weight:400;color:var(--text2)}
+
+/* ── Charts ── */
+.chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px;margin-bottom:22px}
+.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.chart-card.wide{grid-column:1/-1}
+.chart-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.chart-title{font-size:13px;font-weight:600}
+.chart-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.chart-body{padding:16px;position:relative}
+.chart-body canvas{max-height:300px}
+
+/* ── Tables ── */
+.table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px}
+.table-scroll{overflow-x:auto;max-height:420px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{position:sticky;top:0;background:var(--bg3);padding:10px 14px;text-align:left;font-weight:600;color:var(--text2);border-bottom:2px solid var(--border);white-space:nowrap;cursor:pointer;font-size:11px;text-transform:uppercase;letter-spacing:.5px;user-select:none}
+thead th:hover{color:var(--accent2)}
+thead th.sorted-asc::after{content:' ▲';color:var(--accent2)}
+thead th.sorted-desc::after{content:' ▼';color:var(--accent2)}
+tbody td{padding:8px 14px;border-bottom:1px solid var(--border);white-space:nowrap;color:var(--text)}
+tbody tr:hover td{background:rgba(124,92,252,.04)}
+tbody td.num{text-align:right;font-variant-numeric:tabular-nums}
+tbody td.pct{text-align:right;font-variant-numeric:tabular-nums;color:var(--text2)}
+tbody td.subject{white-space:normal;max-width:320px;line-height:1.4}
+tbody td.tag{white-space:nowrap}
+.no-data-row td{text-align:center;color:var(--text3);padding:32px;font-style:italic}
+
+/* ── Color badges for OKUPDRs ── */
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:32px;padding:3px 8px;border-radius:5px;font-weight:700;font-size:11px}
+.badge-red{background:rgba(239,68,68,.18);color:#f87171}
+.badge-yellow{background:rgba(245,158,11,.18);color:#fbbf24}
+.badge-green{background:rgba(16,185,129,.18);color:#34d399}
+.badge-purple{background:rgba(124,92,252,.22);color:#a78bfa}
+.badge-blue{background:rgba(59,130,246,.18);color:#60a5fa}
+.badge-gray{background:rgba(255,255,255,.06);color:var(--text3)}
+.badge-closes{background:rgba(236,72,153,.18);color:#f9a8d4}
+
+/* ── Email type pills ── */
+.type-pill{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.type-Urgency{background:var(--redBg);color:var(--red)}
+.type-Content{background:var(--blueBg);color:var(--blue)}
+.type-ABW{background:var(--cyanBg);color:var(--cyan)}
+.type-Success{background:var(--greenBg);color:var(--green)}
+.type-Thought{background:var(--pinkBg);color:var(--pink)}
+.type-Other{background:rgba(255,255,255,.06);color:var(--text3)}
+
+/* ── Drop zones ── */
+.drop-zone{border:2px dashed var(--border);border-radius:12px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .3s;position:relative}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent);background:var(--accentBg)}
+.drop-zone.loaded{border-color:var(--green);background:var(--greenBg)}
+.drop-zone svg{width:32px;height:32px;color:var(--text3);margin-bottom:8px}
+.drop-zone.loaded svg{color:var(--green)}
+.drop-zone p{color:var(--text2);font-size:13px}
+.drop-zone .sub{font-size:11px;color:var(--text3);margin-top:4px}
+.drop-zone input[type=file]{display:none}
+.dz-filename{font-size:12px;color:var(--green);font-weight:600;margin-top:6px}
+
+/* ── Import page layout ── */
+.import-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.import-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.import-card h3{font-size:13px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.import-card .sub{font-size:11px;color:var(--text2);margin-bottom:14px}
+.step-num{width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ── Filter bar ── */
+.filter-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.filter-bar input,.filter-bar select{padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;outline:none}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--accent)}
+.filter-bar input{flex:1;min-width:200px}
+.filter-bar input::placeholder{color:var(--text3)}
+.filter-count{font-size:12px;color:var(--text2);white-space:nowrap}
+
+/* ── Welcome / Empty states ── */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:64px 32px;text-align:center}
+.empty-state h2{font-size:22px;background:linear-gradient(135deg,var(--accent2),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.empty-state p{color:var(--text2);font-size:14px;max-width:420px;line-height:1.7}
+
+/* ── Processing preview ── */
+.preview-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
+.preview-header{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.preview-title{font-size:13px;font-weight:600}
+.preview-stats{display:flex;gap:16px;font-size:12px;color:var(--text2)}
+.preview-stats strong{color:var(--text)}
+
+/* ── Match indicator ── */
+.match-yes{color:var(--green);font-size:11px}
+.match-no{color:var(--text3);font-size:11px}
+
+/* ── Month row in monthly table ── */
+.month-link{color:var(--accent2);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+
+/* ── Progress bar ── */
+.progress-bar{height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;margin:8px 0}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--cyan));border-radius:2px;transition:width .4s ease}
+
+/* ── Toast ── */
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:10px;font-size:13px;color:#fff;animation:slideIn .3s ease;max-width:360px}
+.toast.success{background:#059669}.toast.error{background:var(--red)}.toast.info{background:var(--accent)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ── Modal ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;align-items:center;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:28px;max-width:560px;width:90%;max-height:85vh;overflow-y:auto}
+.modal h2{font-size:17px;font-weight:700;margin-bottom:6px}
+.modal .sub{font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6}
+.modal-actions{display:flex;gap:10px;margin-top:24px;justify-content:flex-end}
+.modal-close{position:absolute;top:14px;right:18px;background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer}
+.modal-close:hover{color:var(--text)}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+
+/* ── Tag filter chips ── */
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--text2);transition:all .15s}
+.chip:hover{border-color:var(--accent);color:var(--accent2)}
+.chip.active{background:var(--accentBg);border-color:var(--accent);color:var(--accent2)}
+.chip.red.active{background:var(--redBg);border-color:var(--red);color:var(--red)}
+.chip.green.active{background:var(--greenBg);border-color:var(--green);color:var(--green)}
+
+/* ── Responsive ── */
+@media(max-width:860px){
+  .import-grid{grid-template-columns:1fr}
+  .chart-grid{grid-template-columns:1fr}
+  .kpi-row{grid-template-columns:repeat(2,1fr)}
+  .db-stats{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div style="display:flex;align-items:center;gap:20px">
+    <div class="logo">
+      <div class="logo-icon">✉</div>
+      ASF Email Intelligence
+    </div>
+    <div class="db-stats">
+      <div class="db-stat"><span class="db-stat-val" id="hdrMonths">—</span><span>Months</span></div>
+      <div class="db-stat"><span class="db-stat-val" id="hdrEmails">—</span><span>Emails</span></div>
+      <div class="db-stat"><span class="db-stat-val" id="hdrOkupdrs">—</span><span>OKUPDRs</span></div>
+      <div class="db-stat"><span class="db-stat-val" id="hdrCloses">—</span><span>Closes</span></div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-sm btn-outline" onclick="showLoadHistoryModal()">📂 Load History</button>
+    <button class="btn btn-sm" onclick="goTab('import')">➕ Import Month</button>
+  </div>
+</header>
+
+<!-- Nav -->
+<nav class="nav">
+  <div class="nav-tab active" onclick="goTab('dashboard')" data-tab="dashboard">📊 Dashboard</div>
+  <div class="nav-tab" onclick="goTab('months')" data-tab="months">📅 Monthly Overview</div>
+  <div class="nav-tab" onclick="goTab('discover')" data-tab="discover">🔍 Discover Emails</div>
+  <div class="nav-tab" onclick="goTab('import')" data-tab="import">➕ Import Month</div>
+</nav>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div class="page active" id="page-dashboard">
+  <div id="dash-empty" class="empty-state" style="display:none">
+    <h2>No data yet</h2>
+    <p>Load your email history to see the dashboard. Start by clicking <strong>Load History</strong> to import the ASF Email Report spreadsheet, or <strong>Import Month</strong> to add a new month.</p>
+    <button class="btn" onclick="showLoadHistoryModal()">📂 Load History</button>
+  </div>
+  <div id="dash-content" style="display:none">
+    <!-- KPIs -->
+    <div class="kpi-row" id="dashKpis"></div>
+    <!-- Charts row -->
+    <div class="chart-grid">
+      <div class="chart-card wide">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Monthly Performance Trend</div>
+            <div class="chart-sub">OKUPDRs · Sets · Closes per month</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <select id="trendYearFilter" style="padding:5px 8px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:11px;outline:none" onchange="renderTrendChart()">
+              <option value="all">All Years</option>
+            </select>
+          </div>
+        </div>
+        <div class="chart-body"><canvas id="trendChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Avg Open Rate by Month</div>
+            <div class="chart-sub">Last 24 months</div>
+          </div>
+        </div>
+        <div class="chart-body"><canvas id="openRateChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Email Volume by Month</div>
+            <div class="chart-sub">Emails sent per month</div>
+          </div>
+        </div>
+        <div class="chart-body"><canvas id="volumeChart"></canvas></div>
+      </div>
+    </div>
+    <!-- Top performers -->
+    <div class="section-header">
+      <div class="section-title">🏆 All-Time Top Performing Emails <span>by OKUPDRs</span></div>
+      <select id="topByField" style="padding:6px 10px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;outline:none" onchange="renderTopEmails()">
+        <option value="okupdrs">by OKUPDRs</option>
+        <option value="closes">by Closes</option>
+        <option value="sets">by Sets</option>
+        <option value="openRate">by Open Rate</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <div class="table-scroll"><table id="topEmailsTable"><thead></thead><tbody></tbody></table></div>
+    </div>
+    <!-- Best months summary -->
+    <div class="section-header">
+      <div class="section-title">📅 Best Months at a Glance <span>sorted by total Closes</span></div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-scroll"><table id="bestMonthsTable"><thead></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MONTHLY OVERVIEW ═══ -->
+<div class="page" id="page-months">
+  <div id="months-empty" class="empty-state" style="display:none">
+    <h2>No monthly data</h2>
+    <p>Import your history to see a full month-by-month breakdown.</p>
+    <button class="btn" onclick="showLoadHistoryModal()">📂 Load History</button>
+  </div>
+  <div id="months-content" style="display:none">
+    <div class="filter-bar" style="margin-bottom:14px">
+      <select id="monthsYearFilter" style="padding:8px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;outline:none" onchange="renderMonthsTable()">
+        <option value="all">All Years</option>
+      </select>
+      <div class="filter-count" id="monthsCount"></div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table id="monthsTable">
+          <thead>
+            <tr>
+              <th onclick="sortMonths('monthKey')">Month</th>
+              <th onclick="sortMonths('emailCount')" class="num">Emails</th>
+              <th onclick="sortMonths('filteredCount')" class="num">Filtered</th>
+              <th onclick="sortMonths('avgOpenRate')" class="num">Avg Open</th>
+              <th onclick="sortMonths('avgClickRate')" class="num">Avg Click</th>
+              <th onclick="sortMonths('totalOkupdrs')" class="num">OKUPDRs</th>
+              <th onclick="sortMonths('totalSets')" class="num">Sets</th>
+              <th onclick="sortMonths('totalCloses')" class="num">Closes</th>
+              <th onclick="sortMonths('closeRate')" class="num">Close %</th>
+            </tr>
+          </thead>
+          <tbody id="monthsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- Month detail drill-down -->
+    <div id="monthDetailSection" style="display:none">
+      <div class="section-header">
+        <div class="section-title" id="monthDetailTitle">Month Detail</div>
+        <button class="btn btn-sm btn-outline" onclick="closeMonthDetail()">✕ Close</button>
+      </div>
+      <div class="table-wrap">
+        <div class="table-scroll"><table id="monthDetailTable"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DISCOVER EMAILS ═══ -->
+<div class="page" id="page-discover">
+  <div id="discover-empty" class="empty-state" style="display:none">
+    <h2>No emails to discover</h2>
+    <p>Load your email history first to search and analyze emails across all time.</p>
+    <button class="btn" onclick="showLoadHistoryModal()">📂 Load History</button>
+  </div>
+  <div id="discover-content" style="display:none">
+    <div class="filter-bar">
+      <input type="text" id="discoverSearch" placeholder="Search subject lines..." oninput="renderDiscoverTable()">
+      <select id="discoverYear" onchange="renderDiscoverTable()"><option value="">All Years</option></select>
+      <select id="discoverMonth" onchange="renderDiscoverTable()"><option value="">All Months</option></select>
+      <select id="discoverType" onchange="renderDiscoverTable()"><option value="">All Types</option></select>
+      <select id="discoverSort" onchange="renderDiscoverTable()">
+        <option value="date_desc">Date (newest first)</option>
+        <option value="date_asc">Date (oldest first)</option>
+        <option value="okupdrs_desc">Most OKUPDRs</option>
+        <option value="closes_desc">Most Closes</option>
+        <option value="sets_desc">Most Sets</option>
+        <option value="open_desc">Highest Open Rate</option>
+        <option value="click_desc">Highest Click Rate</option>
+      </select>
+    </div>
+    <div class="filter-bar" style="margin-top:-6px">
+      <label style="font-size:12px;color:var(--text2)">Min OKUPDRs:</label>
+      <input type="number" id="discoverMinOkupdrs" min="0" placeholder="0" style="width:80px;flex:none" oninput="renderDiscoverTable()">
+      <label style="font-size:12px;color:var(--text2)">Min Closes:</label>
+      <input type="number" id="discoverMinCloses" min="0" placeholder="0" style="width:80px;flex:none" oninput="renderDiscoverTable()">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer">
+        <input type="checkbox" id="discoverExcludeFiltered" onchange="renderDiscoverTable()" style="accent-color:var(--accent)"> Exclude intl/demo/consulting
+      </label>
+      <div class="filter-count" id="discoverCount"></div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table id="discoverTable">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Subject Line</th>
+              <th class="num">Open %</th>
+              <th class="num">Click %</th>
+              <th class="num">OKUPDRs</th>
+              <th class="num">Sets</th>
+              <th class="num">Closes</th>
+              <th>Drip Link</th>
+            </tr>
+          </thead>
+          <tbody id="discoverTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="discoverPager" style="display:flex;justify-content:center;gap:8px;margin-top:12px;font-size:12px;color:var(--text2)"></div>
+  </div>
+</div>
+
+<!-- ═══ IMPORT MONTH ═══ -->
+<div class="page" id="page-import">
+  <div style="max-width:900px">
+    <div style="margin-bottom:20px">
+      <div style="font-size:18px;font-weight:700;margin-bottom:6px">Import New Month</div>
+      <div style="font-size:13px;color:var(--text2)">Upload your two Drip export files and this tool will automatically follow the Monthly Email Report instructions — producing a filtered report, a full report, and saving the month to the database.</div>
+    </div>
+    <div class="import-grid">
+      <!-- Step 1 -->
+      <div class="import-card">
+        <h3><span class="step-num">1</span> Drip RAW Email Metrics CSV</h3>
+        <div class="sub">Export from Drip → Broadcasts → Export metrics<br>Needs columns: id, strategy_name, email_subject, sent_at, open_rate, click_through_rate</div>
+        <div class="drop-zone" id="dzDrip" onclick="document.getElementById('fileDrip').click()" ondragover="dzOver(event,'dzDrip')" ondragleave="dzLeave('dzDrip')" ondrop="dzDrop(event,'dzDrip','drip')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M20 16v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2"/></svg>
+          <p>Drop file here or click to browse</p>
+          <div class="sub">Drip email metrics export (.csv or .xlsx) — or drop a combined monthly xlsx to auto-fill both fields</div>
+          <div class="dz-filename" id="dzDripName" style="display:none"></div>
+          <input type="file" id="fileDrip" accept=".csv,.xlsx,.xls" onchange="handleImportFile(this,'drip')">
+        </div>
+        <div id="dripPreviewStats" style="margin-top:10px;font-size:12px;color:var(--text2)"></div>
+      </div>
+      <!-- Step 2 -->
+      <div class="import-card">
+        <h3><span class="step-num">2</span> Last Touch Attribution CSV</h3>
+        <div class="sub">From CRM / Sales tracking — last email before conversion<br>Needs columns: Last Marketing Term, Sum of OKUPDR?, Sum of Demo was Set, Sum of Converted</div>
+        <div class="drop-zone" id="dzLastTouch" onclick="document.getElementById('fileLastTouch').click()" ondragover="dzOver(event,'dzLastTouch')" ondragleave="dzLeave('dzLastTouch')" ondrop="dzDrop(event,'dzLastTouch','lasttouch')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M20 16v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2"/></svg>
+          <p>Drop file here or click to browse</p>
+          <div class="sub">Last touch attribution export (.csv or .xlsx)</div>
+          <div class="dz-filename" id="dzLastTouchName" style="display:none"></div>
+          <input type="file" id="fileLastTouch" accept=".csv,.xlsx,.xls" onchange="handleImportFile(this,'lasttouch')">
+        </div>
+        <div id="lastTouchPreviewStats" style="margin-top:10px;font-size:12px;color:var(--text2)"></div>
+      </div>
+    </div>
+    <!-- Process button -->
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px">
+      <button class="btn" id="processBtn" onclick="processImport()" disabled>⚙️ Process Month</button>
+      <div style="font-size:12px;color:var(--text2)" id="processStatus">Upload both files to continue.</div>
+    </div>
+    <!-- Preview area -->
+    <div id="importPreviewArea" style="display:none">
+      <!-- Filtered preview -->
+      <div class="preview-section" id="prevFiltered">
+        <div class="preview-header">
+          <div class="preview-title">✅ Filtered Report (stakeholder version)</div>
+          <div class="preview-stats" id="prevFilteredStats"></div>
+        </div>
+        <div class="table-scroll" style="max-height:320px">
+          <table><thead id="prevFilteredHead"></thead><tbody id="prevFilteredBody"></tbody></table>
+        </div>
+      </div>
+      <!-- Full preview -->
+      <div class="preview-section" id="prevFull">
+        <div class="preview-header">
+          <div class="preview-title">📋 Full Report (all emails including intl/demo)</div>
+          <div class="preview-stats" id="prevFullStats"></div>
+        </div>
+        <div class="table-scroll" style="max-height:280px">
+          <table><thead id="prevFullHead"></thead><tbody id="prevFullBody"></tbody></table>
+        </div>
+      </div>
+      <!-- Actions -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+        <button class="btn btn-green btn-sm" onclick="exportFilteredCSV()">⬇️ Download Filtered CSV</button>
+        <button class="btn btn-outline btn-sm" onclick="exportFullCSV()">⬇️ Download Full CSV</button>
+        <button class="btn btn-sm" onclick="saveMonthToDb()" id="saveMonthBtn">💾 Save Month to Database</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Load History Modal -->
+<div class="modal-overlay" id="loadHistoryModal" onclick="if(event.target===this)closeModal()">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <h2>📂 Load Email History</h2>
+    <div class="sub">Upload any of these files to populate the database — all emails are added automatically, existing data is preserved (no duplicates).<br><br>
+    <strong>Supported files:</strong><br>
+    • <code>ASF Email Report.xlsx</code> — the main multi-month workbook (recommended, imports everything at once)<br>
+    • Any monthly overview xlsx (e.g. <code>August 2023 EmailOverview.xlsx</code>)<br>
+    • Individual month files with "Sheet1" naming (month detected from data)
+    </div>
+    <div class="drop-zone" id="dzHistory" onclick="document.getElementById('fileHistory').click()" ondragover="dzOver(event,'dzHistory')" ondragleave="dzLeave('dzHistory')" ondrop="dzDrop(event,'dzHistory','history')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5l5 5v14a2 2 0 01-2 2z"/></svg>
+      <p>Drop any <strong>.xlsx</strong> email report file here or click to browse</p>
+      <div class="sub">All month sheets found in the file will be imported</div>
+      <div class="dz-filename" id="dzHistoryName" style="display:none"></div>
+      <input type="file" id="fileHistory" accept=".xlsx,.xls" multiple onchange="handleHistoryFiles(this)">
+    </div>
+    <div id="historyProgress" style="display:none;margin-top:14px">
+      <div style="font-size:12px;color:var(--text2)" id="historyProgressText">Processing...</div>
+      <div class="progress-bar"><div class="progress-fill" id="historyProgressFill" style="width:0%"></div></div>
+    </div>
+    <div id="historyResult" style="display:none;margin-top:12px;padding:12px;background:var(--greenBg);border:1px solid var(--green);border-radius:8px;font-size:13px;color:var(--green)"></div>
+    <div style="margin-top:16px;padding:12px;background:var(--bg3);border-radius:8px;font-size:12px;color:var(--text2)">
+      <strong style="color:var(--text)">💡 Workflow tip:</strong> Run <code style="background:var(--bg);padding:2px 6px;border-radius:4px;color:var(--accent2)">generate-history.py</code> once to pre-load all your historical xlsx files automatically. After that, use <strong>Import Month</strong> in the nav for any new month — no need to touch history again.
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal()">Close</button>
+      <button class="btn btn-sm btn-outline" onclick="resyncFromSeed()" style="border-color:var(--orange);color:var(--orange)">🔄 Re-sync from history file</button>
+      <button class="btn btn-sm" onclick="clearDatabase()" style="background:var(--red)">🗑️ Clear Database</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════
+const DRIP_ACCOUNT = '7865418';
+const DRIP_LINK = id => `https://www.getdrip.com/${DRIP_ACCOUNT}/broadcasts/${id}`;
+const FILTER_TERMS = ['-int','consulting','demo','registrants','workshop-invite'];
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+// Emails excluded from "Filtered" report (but kept in Full)
+function shouldExclude(strategyName, subject) {
+  if (!strategyName && !subject) return false;
+  const s = (strategyName||'').toLowerCase();
+  const sub = (subject||'').toLowerCase();
+  return FILTER_TERMS.some(t => s.includes(t) || (t === 'demo' && sub.includes('demo invite')));
+}
+
+// ═══════════════════════════════════════════════
+// INDEXED DB
+// ═══════════════════════════════════════════════
+let db;
+const DB_NAME = 'asfEmailDB', DB_VER = 2;
+
+function openDB() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains('emails')) {
+        const s = d.createObjectStore('emails', {keyPath:'uid', autoIncrement:true});
+        s.createIndex('monthKey','monthKey',{unique:false});
+        s.createIndex('date','date',{unique:false});
+      }
+      if (!d.objectStoreNames.contains('months')) {
+        d.createObjectStore('months', {keyPath:'monthKey'});
+      }
+    };
+    req.onsuccess = e => { db = e.target.result; res(db); };
+    req.onerror = e => rej(e);
+  });
+}
+
+function dbPut(store, data) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(store, 'readwrite');
+    const req = tx.objectStore(store).put(data);
+    req.onsuccess = () => res(req.result);
+    req.onerror = e => rej(e);
+  });
+}
+
+function dbGetAll(store) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(store, 'readonly');
+    const req = tx.objectStore(store).getAll();
+    req.onsuccess = () => res(req.result);
+    req.onerror = e => rej(e);
+  });
+}
+
+function dbClear(store) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(store, 'readwrite');
+    const req = tx.objectStore(store).clear();
+    req.onsuccess = () => res();
+    req.onerror = e => rej(e);
+  });
+}
+
+function dbGetByMonthKey(monthKey) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction('emails', 'readonly');
+    const idx = tx.objectStore('emails').index('monthKey');
+    const req = idx.getAll(IDBKeyRange.only(monthKey));
+    req.onsuccess = () => res(req.result);
+    req.onerror = e => rej(e);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// PARSE UTILITIES
+// ═══════════════════════════════════════════════
+function parsePct(v) {
+  if (v === null || v === undefined || v === '') return null;
+  if (typeof v === 'number') return v > 1 ? v / 100 : v;
+  const s = String(v).replace('%','').trim();
+  if (s === '') return null;
+  const n = parseFloat(s);
+  return isNaN(n) ? null : (n > 1 ? n / 100 : n);
+}
+
+function parseNum(v) {
+  if (v === null || v === undefined || v === '') return null;
+  const n = parseFloat(String(v).replace(/,/g,''));
+  return isNaN(n) ? null : n;
+}
+
+function fmtPct(v) {
+  if (v === null || v === undefined) return '—';
+  const n = v > 1 ? v : v * 100;
+  return n.toFixed(2) + '%';
+}
+
+function fmtNum(v) {
+  if (v === null || v === undefined) return '—';
+  return v.toFixed(0);
+}
+
+function parseDate(v) {
+  if (!v) return null;
+  if (v instanceof Date) return v.toISOString().slice(0,10);
+  if (typeof v === 'number') {
+    // Excel serial date
+    const d = new Date((v - 25569) * 86400 * 1000);
+    return d.toISOString().slice(0,10);
+  }
+  const s = String(v).trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+  const d = new Date(s);
+  if (!isNaN(d)) return d.toISOString().slice(0,10);
+  return null;
+}
+
+function dateToMonthKey(dateStr) {
+  if (!dateStr) return null;
+  return dateStr.slice(0,7); // "2026-01"
+}
+
+function monthKeyToName(key) {
+  if (!key) return '';
+  const [y, m] = key.split('-');
+  return MONTH_NAMES[parseInt(m,10)-1] + ' ' + y;
+}
+
+function normalizeStrategy(name) {
+  if (!name) return '';
+  return name.toLowerCase().replace(/-/g,'_').trim();
+}
+
+// ═══════════════════════════════════════════════
+// PARSE: ASF Email Report XLSX (multi-sheet)
+// ═══════════════════════════════════════════════
+const SKIP_EXACT = new Set([
+  'format just duplicate this!','note','2021 email report',
+  'email_report_monthly_analysis','email_report_detail_by_month',
+]);
+const SKIP_CONTAINS = [
+  'last touch','drip ','copy of','sf march','sf feb','sf april','sf may',
+  'email_report','format (dont','drip march','drip feb',
+];
+const SHORT_MONTHS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+
+function detectSheetType(sheetName) {
+  const n = sheetName.toLowerCase().trim();
+  if (SKIP_EXACT.has(n)) return 'skip';
+  if (SKIP_CONTAINS.some(s => n.includes(s))) return 'skip';
+  // Full month names: "January 2026", "April 2023", "2023 Jan"
+  if (MONTH_NAMES.some(m => n.includes(m.toLowerCase())) && /\d{4}/.test(n)) return 'month';
+  // Short month names: "Aug 2023", "Jan 2024"
+  if (SHORT_MONTHS.some(m => n.startsWith(m) || n.includes(' '+m+' ') || n.includes(' '+m)) && /\d{4}/.test(n)) return 'month';
+  // Generic unnamed sheets — try to sniff the data
+  if (/^sheet\d*$/.test(n)) return 'unknown';
+  return 'skip';
+}
+
+function parseMonthSheetName(sheetName) {
+  const n = sheetName.trim();
+  // Full month names
+  for (let i = 0; i < MONTH_NAMES.length; i++) {
+    if (n.toLowerCase().includes(MONTH_NAMES[i].toLowerCase())) {
+      const yr = n.match(/\d{4}/);
+      if (yr) {
+        const mon = i + 1;
+        const monthKey = `${yr[0]}-${String(mon).padStart(2,'0')}`;
+        return { year: +yr[0], month: mon, monthKey, monthName: `${MONTH_NAMES[i]} ${yr[0]}` };
+      }
+    }
+  }
+  // Short month names: "Aug 2023"
+  for (let i = 0; i < SHORT_MONTHS.length; i++) {
+    const sm = SHORT_MONTHS[i];
+    if (n.toLowerCase().includes(sm)) {
+      const yr = n.match(/\d{4}/);
+      if (yr) {
+        const mon = i + 1;
+        const monthKey = `${yr[0]}-${String(mon).padStart(2,'0')}`;
+        return { year: +yr[0], month: mon, monthKey, monthName: `${MONTH_NAMES[i]} ${yr[0]}` };
+      }
+    }
+  }
+  return null;
+}
+
+// Parse a date cell — handles Date objects, Excel serials, strings, and
+// Excel HYPERLINK formula strings like =HYPERLINK("url","2026-01-01")
+function parseDateCell(val) {
+  if (!val) return { date: null, dripId: null };
+  const s = String(val).trim();
+  // HYPERLINK formula: =HYPERLINK("url","display") — quotes may be " or "  or "
+  const m = s.match(/HYPERLINK\([""“”]([^""“”,]+)[""“”]\s*,\s*[""“”](.*?)[""“”]\)/i);
+  if (m) {
+    const idM = m[1].match(/broadcasts\/(\d+)/);
+    return { date: parseDate(m[2]), dripId: idM ? idM[1] : null };
+  }
+  return { date: parseDate(val), dripId: null };
+}
+
+// Derive monthKey from a set of date strings (takes the most common)
+function inferMonthKey(dates) {
+  const counts = {};
+  for (const d of dates) {
+    const k = dateToMonthKey(d);
+    if (k) counts[k] = (counts[k]||0) + 1;
+  }
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || null;
+}
+
+function parseSheetRows(sheet, sheetName, knownMeta) {
+  const results = [];
+  const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null, raw: false });
+  if (!rows || rows.length < 2) return results;
+
+  // Find header row — look for a row containing "subject" AND ("date" or "open")
+  let headerIdx = -1, headers = [];
+  for (let r = 0; r < Math.min(8, rows.length); r++) {
+    const row = rows[r];
+    if (!row) continue;
+    const rowStr = row.map(c => String(c||'').toLowerCase()).join(',');
+    if (rowStr.includes('subject') && (rowStr.includes('date') || rowStr.includes('open'))) {
+      headerIdx = r; headers = row.map(c => String(c||'').toLowerCase().trim()); break;
+    }
+  }
+  if (headerIdx < 0) return results;
+
+  const ci = (...names) => { for (const n of names) { const i = headers.findIndex(h=>h.includes(n)); if(i>=0) return i; } return -1; };
+  const iDate   = ci('date sent','date');
+  const iSubj   = ci('subject');
+  const iType   = ci('type');
+  const iResend = ci('resend');
+  const iOpen   = ci('open rate','open_rate');
+  const iClick  = ci('click rate','click_rate','click through','click_through');
+  const iOk     = ci('okupdr','ok updr','ocupdr');
+  const iSets   = ci('sets','demo was set','demo set');
+  const iCloses = ci('close','converted');
+  const iNote   = ci('note');
+  const iStrat  = ci('strategy','email_name','email name','keyword');
+  const iId     = ci('broadcast');
+
+  if (iDate < 0 || iSubj < 0) return results;
+
+  // Pass 1: collect valid dates to infer month if needed
+  const allDates = [];
+  for (let r = headerIdx+1; r < rows.length; r++) {
+    const row = rows[r];
+    if (!row) continue;
+    const {date} = parseDateCell(row[iDate]);
+    if (date) allDates.push(date);
+  }
+  const inferredKey = knownMeta?.monthKey || inferMonthKey(allDates);
+  if (!inferredKey) return results;
+
+  const finalMeta = knownMeta || {
+    monthKey: inferredKey,
+    monthName: monthKeyToName(inferredKey),
+    year: +inferredKey.slice(0,4),
+    month: +inferredKey.slice(5,7)
+  };
+
+  for (let r = headerIdx+1; r < rows.length; r++) {
+    const row = rows[r];
+    if (!row || row.every(c=>c===null||c==='')) continue;
+
+    const {date: dateStr, dripId: hyperlinkId} = parseDateCell(row[iDate]);
+    const subject = row[iSubj] ? String(row[iSubj]).trim().replace(/\n/g,' ') : null;
+    if (!subject || !dateStr) continue;
+
+    const rowKey = dateToMonthKey(dateStr);
+    // Allow ±1 month tolerance for cross-month emails
+    if (rowKey && Math.abs(
+      (+finalMeta.monthKey.slice(0,4)*12 + +finalMeta.monthKey.slice(5,7)) -
+      (+rowKey.slice(0,4)*12 + +rowKey.slice(5,7))
+    ) > 1) continue;
+
+    const type     = iType   >= 0 ? String(row[iType]||'').trim() : '';
+    const resend   = iResend >= 0 ? (row[iResend]===true||String(row[iResend]).toLowerCase()==='true') : false;
+    const openRate = parsePct(iOpen   >= 0 ? row[iOpen]   : null);
+    const clickRate= parsePct(iClick  >= 0 ? row[iClick]  : null);
+    const okupdrs  = parseNum(iOk     >= 0 ? row[iOk]     : null);
+    const sets     = parseNum(iSets   >= 0 ? row[iSets]   : null);
+    const closes   = parseNum(iCloses >= 0 ? row[iCloses] : null);
+    const note     = iNote  >= 0 ? String(row[iNote]||'').trim() : '';
+    const strategyName = iStrat >= 0 ? String(row[iStrat]||'').trim() : '';
+    let dripId = hyperlinkId || (iId >= 0 ? String(row[iId]||'').trim() : '');
+    const urlM = dripId.match(/broadcasts\/(\d+)/);
+    if (urlM) dripId = urlM[1];
+
+    results.push({
+      monthKey: finalMeta.monthKey,
+      monthName: finalMeta.monthName,
+      year: finalMeta.year,
+      month: finalMeta.month,
+      date: dateStr, type, resend, subject, openRate, clickRate,
+      okupdrs, sets, closes, note, strategyName, dripId,
+      excluded: shouldExclude(strategyName, subject),
+      _sheetName: sheetName
+    });
+  }
+  return results;
+}
+
+function parseMainWorkbook(workbook, onProgress) {
+  const allEmails = [];
+  const seenKeys = new Set(); // deduplicate by monthKey+date+subject
+  const sheetNames = workbook.SheetNames;
+
+  for (let si = 0; si < sheetNames.length; si++) {
+    const shName = sheetNames[si];
+    if (onProgress) onProgress(shName, si / sheetNames.length);
+    const type = detectSheetType(shName);
+    if (type === 'skip') continue;
+
+    const meta = parseMonthSheetName(shName); // may be null for 'unknown' sheets
+    const sheet = workbook.Sheets[shName];
+    const rows = parseSheetRows(sheet, shName, meta);
+    for (const e of rows) {
+      const key = `${e.monthKey}|${e.date}|${e.subject}`;
+      if (seenKeys.has(key)) continue;
+      seenKeys.add(key);
+      allEmails.push(e);
+    }
+  }
+  return allEmails;
+}
+
+// ═══════════════════════════════════════════════
+// BUILD MONTH META from emails array
+// ═══════════════════════════════════════════════
+function buildMonthMeta(emails) {
+  const map = {};
+  for (const e of emails) {
+    if (!e.monthKey) continue;
+    if (!map[e.monthKey]) {
+      map[e.monthKey] = {
+        monthKey: e.monthKey,
+        monthName: e.monthName || monthKeyToName(e.monthKey),
+        year: e.year || parseInt(e.monthKey.slice(0,4),10),
+        month: e.month || parseInt(e.monthKey.slice(5,7),10),
+        emailCount: 0, filteredCount: 0,
+        totalOkupdrs: 0, totalSets: 0, totalCloses: 0,
+        sumOpenRate: 0, sumClickRate: 0, openRateCount: 0, clickRateCount: 0,
+        avgOpenRate: 0, avgClickRate: 0,
+        importedAt: new Date().toISOString()
+      };
+    }
+    const m = map[e.monthKey];
+    m.emailCount++;
+    if (!e.excluded) m.filteredCount++;
+    if (e.okupdrs !== null) m.totalOkupdrs += e.okupdrs;
+    if (e.sets !== null) m.totalSets += e.sets;
+    if (e.closes !== null) m.totalCloses += e.closes;
+    if (e.openRate !== null) { m.sumOpenRate += e.openRate; m.openRateCount++; }
+    if (e.clickRate !== null) { m.sumClickRate += e.clickRate; m.clickRateCount++; }
+  }
+  for (const k in map) {
+    const m = map[k];
+    m.avgOpenRate = m.openRateCount > 0 ? m.sumOpenRate / m.openRateCount : 0;
+    m.avgClickRate = m.clickRateCount > 0 ? m.sumClickRate / m.clickRateCount : 0;
+    delete m.sumOpenRate; delete m.sumClickRate;
+    delete m.openRateCount; delete m.clickRateCount;
+  }
+  return Object.values(map);
+}
+
+// ═══════════════════════════════════════════════
+// SAVE TO DB
+// ═══════════════════════════════════════════════
+async function saveEmailsAndMeta(emails) {
+  const metas = buildMonthMeta(emails);
+  // Save all emails
+  for (const e of emails) await dbPut('emails', e);
+  // Save/update month meta
+  for (const m of metas) await dbPut('months', m);
+  return metas.length;
+}
+
+// ═══════════════════════════════════════════════
+// APP STATE (in-memory cache after DB load)
+// ═══════════════════════════════════════════════
+const cache = { emails: [], months: [] };
+
+async function loadCache() {
+  cache.emails = await dbGetAll('emails');
+  cache.months = await dbGetAll('months');
+  cache.months.sort((a,b)=>a.monthKey.localeCompare(b.monthKey));
+}
+
+async function refreshAll() {
+  await loadCache();
+  updateHeaderStats();
+  renderDashboard();
+  renderMonthsTable();
+  renderDiscoverFilters();
+  renderDiscoverTable();
+}
+
+function updateHeaderStats() {
+  const totalOk = cache.months.reduce((s,m)=>s+m.totalOkupdrs,0);
+  const totalCl = cache.months.reduce((s,m)=>s+m.totalCloses,0);
+  document.getElementById('hdrMonths').textContent = cache.months.length;
+  document.getElementById('hdrEmails').textContent = cache.emails.length.toLocaleString();
+  document.getElementById('hdrOkupdrs').textContent = totalOk.toLocaleString();
+  document.getElementById('hdrCloses').textContent = totalCl.toLocaleString();
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function goTab(tab) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + tab));
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'months') renderMonthsTable();
+  if (tab === 'discover') { renderDiscoverFilters(); renderDiscoverTable(); }
+}
+
+// ═══════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════
+let trendChartInst, openRateChartInst, volumeChartInst;
+
+function renderDashboard() {
+  const hasData = cache.months.length > 0;
+  document.getElementById('dash-empty').style.display = hasData ? 'none' : '';
+  document.getElementById('dash-content').style.display = hasData ? '' : 'none';
+  if (!hasData) return;
+
+  // KPIs
+  const totalOk = cache.months.reduce((s,m)=>s+m.totalOkupdrs,0);
+  const totalSets = cache.months.reduce((s,m)=>s+m.totalSets,0);
+  const totalCl = cache.months.reduce((s,m)=>s+m.totalCloses,0);
+  const avgOpen = cache.months.reduce((s,m)=>s+m.avgOpenRate,0) / cache.months.length;
+  const bestMonth = [...cache.months].sort((a,b)=>b.totalCloses-a.totalCloses)[0];
+
+  document.getElementById('dashKpis').innerHTML = `
+    ${kpiCard('purple','📅',cache.months.length,'Months in Database','')}
+    ${kpiCard('green','✉',cache.emails.length.toLocaleString(),'Total Emails Tracked','')}
+    ${kpiCard('blue','👁',fmtPct(avgOpen),'Avg Open Rate','across all months')}
+    ${kpiCard('orange','📋',totalOk.toLocaleString(),'Total OKUPDRs','all time')}
+    ${kpiCard('pink','📞',totalSets.toLocaleString(),'Total Demo Sets','all time')}
+    ${kpiCard('cyan','🏆',totalCl.toLocaleString(),'Total Closes','all time')}
+  `;
+
+  // Populate year filter
+  const years = [...new Set(cache.months.map(m=>m.year))].sort((a,b)=>a-b);
+  const yf = document.getElementById('trendYearFilter');
+  yf.innerHTML = '<option value="all">All Years</option>' + years.map(y=>`<option value="${y}">${y}</option>`).join('');
+
+  renderTrendChart();
+  renderOpenRateChart();
+  renderVolumeChart();
+  renderTopEmails();
+  renderBestMonths();
+}
+
+function kpiCard(color, icon, value, label, sub) {
+  return `<div class="kpi-card ${color}">
+    <div class="kpi-icon">${icon}</div>
+    <div class="kpi-label">${label}</div>
+    <div class="kpi-value">${value}</div>
+    ${sub ? `<div class="kpi-sub">${sub}</div>` : ''}
+  </div>`;
+}
+
+function renderTrendChart() {
+  const yr = document.getElementById('trendYearFilter').value;
+  let months = [...cache.months];
+  if (yr !== 'all') months = months.filter(m=>m.year==yr);
+  months.sort((a,b)=>a.monthKey.localeCompare(b.monthKey));
+  const labels = months.map(m=>m.monthName.replace(' 20','\''));
+  const chartData = {
+    labels,
+    datasets: [
+      {label:'OKUPDRs',data:months.map(m=>m.totalOkupdrs),borderColor:'#7c5cfc',backgroundColor:'rgba(124,92,252,.15)',tension:.3,fill:true,pointRadius:3},
+      {label:'Sets',data:months.map(m=>m.totalSets),borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.1)',tension:.3,fill:false,pointRadius:3},
+      {label:'Closes',data:months.map(m=>m.totalCloses),borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.1)',tension:.3,fill:false,pointRadius:3},
+    ]
+  };
+  if (trendChartInst) trendChartInst.destroy();
+  trendChartInst = new Chart(document.getElementById('trendChart'), {
+    type:'line', data:chartData,
+    options:{ responsive:true, plugins:{legend:{labels:{color:'#8892b0',boxWidth:12}}},
+      scales:{x:{ticks:{color:'#5a6484',maxRotation:45}},y:{ticks:{color:'#5a6484'},beginAtZero:true}} }
+  });
+}
+
+function renderOpenRateChart() {
+  let months = [...cache.months].sort((a,b)=>a.monthKey.localeCompare(b.monthKey)).slice(-24);
+  if (openRateChartInst) openRateChartInst.destroy();
+  openRateChartInst = new Chart(document.getElementById('openRateChart'), {
+    type:'bar',
+    data:{ labels:months.map(m=>m.monthName.replace(' 20','\'').slice(0,8)),
+           datasets:[{label:'Avg Open Rate',data:months.map(m=>+(m.avgOpenRate*100).toFixed(2)),
+             backgroundColor:'rgba(6,182,212,.7)',borderColor:'#06b6d4',borderWidth:1}] },
+    options:{ responsive:true, plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#5a6484',maxRotation:45}},y:{ticks:{color:'#5a6484',callback:v=>v+'%'}}} }
+  });
+}
+
+function renderVolumeChart() {
+  let months = [...cache.months].sort((a,b)=>a.monthKey.localeCompare(b.monthKey)).slice(-24);
+  if (volumeChartInst) volumeChartInst.destroy();
+  volumeChartInst = new Chart(document.getElementById('volumeChart'), {
+    type:'bar',
+    data:{ labels:months.map(m=>m.monthName.replace(' 20','\'').slice(0,8)),
+           datasets:[{label:'Emails Sent',data:months.map(m=>m.emailCount),
+             backgroundColor:'rgba(245,158,11,.7)',borderColor:'#f59e0b',borderWidth:1}] },
+    options:{ responsive:true, plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#5a6484',maxRotation:45}},y:{ticks:{color:'#5a6484'},beginAtZero:true}} }
+  });
+}
+
+function renderTopEmails() {
+  const field = document.getElementById('topByField').value;
+  const thead = document.querySelector('#topEmailsTable thead');
+  const tbody = document.querySelector('#topEmailsTable tbody');
+  const sorted = cache.emails.filter(e=>e[field]!==null&&e[field]!==undefined)
+    .sort((a,b)=>(b[field]||0)-(a[field]||0)).slice(0,15);
+
+  thead.innerHTML = `<tr><th>Month</th><th>Date</th><th>Type</th><th class="num">Subject Line</th><th class="num">Open</th><th class="num">Click</th><th class="num">OKUPDRs</th><th class="num">Sets</th><th class="num">Closes</th></tr>`;
+  tbody.innerHTML = sorted.map(e => `<tr>
+    <td>${e.monthName||e.monthKey}</td>
+    <td>${e.date||''}</td>
+    <td class="tag">${typePill(e.type)}</td>
+    <td class="subject">${dripLink(e.dripId,e.subject)}</td>
+    <td class="pct">${fmtPct(e.openRate)}</td>
+    <td class="pct">${fmtPct(e.clickRate)}</td>
+    <td class="num">${ocupdrBadge(e.okupdrs)}</td>
+    <td class="num">${numBadge(e.sets,'blue')}</td>
+    <td class="num">${numBadge(e.closes,'closes')}</td>
+  </tr>`).join('') || noDataRow(9);
+}
+
+function renderBestMonths() {
+  const months = [...cache.months].sort((a,b)=>b.totalCloses-a.totalCloses);
+  const thead = document.querySelector('#bestMonthsTable thead');
+  const tbody = document.querySelector('#bestMonthsTable tbody');
+  thead.innerHTML = `<tr><th>Month</th><th class="num">Emails</th><th class="num">Avg Open</th><th class="num">Avg Click</th><th class="num">OKUPDRs</th><th class="num">Sets</th><th class="num">Closes</th><th class="num">Close Rate</th></tr>`;
+  tbody.innerHTML = months.slice(0,20).map(m=>`<tr>
+    <td><span class="month-link" onclick="drillMonth('${m.monthKey}')">${m.monthName}</span></td>
+    <td class="num">${m.emailCount}</td>
+    <td class="pct">${fmtPct(m.avgOpenRate)}</td>
+    <td class="pct">${fmtPct(m.avgClickRate)}</td>
+    <td class="num">${ocupdrBadge(m.totalOkupdrs)}</td>
+    <td class="num">${numBadge(m.totalSets,'blue')}</td>
+    <td class="num">${numBadge(m.totalCloses,'closes')}</td>
+    <td class="pct">${m.totalOkupdrs>0 ? ((m.totalCloses/m.totalOkupdrs)*100).toFixed(1)+'%' : '—'}</td>
+  </tr>`).join('') || noDataRow(8);
+}
+
+// ═══════════════════════════════════════════════
+// MONTHLY OVERVIEW TAB
+// ═══════════════════════════════════════════════
+let monthsSortCol = 'monthKey', monthsSortAsc = false;
+
+function sortMonths(col) {
+  if (monthsSortCol === col) monthsSortAsc = !monthsSortAsc;
+  else { monthsSortCol = col; monthsSortAsc = false; }
+  renderMonthsTable();
+}
+
+function renderMonthsTable() {
+  const hasData = cache.months.length > 0;
+  document.getElementById('months-empty').style.display = hasData ? 'none' : '';
+  document.getElementById('months-content').style.display = hasData ? '' : 'none';
+  if (!hasData) return;
+
+  const years = [...new Set(cache.months.map(m=>m.year))].sort();
+  const yf = document.getElementById('monthsYearFilter');
+  const curYear = yf.value;
+  yf.innerHTML = '<option value="all">All Years</option>' + years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  if (years.includes(parseInt(curYear))) yf.value = curYear;
+
+  let months = [...cache.months];
+  if (yf.value !== 'all') months = months.filter(m=>m.year==yf.value);
+  months = months.map(m=>({...m, closeRate: m.totalOkupdrs>0 ? m.totalCloses/m.totalOkupdrs : 0}));
+  months.sort((a,b)=>{
+    const av = a[monthsSortCol], bv = b[monthsSortCol];
+    if (typeof av === 'string') return monthsSortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+    return monthsSortAsc ? (av||0)-(bv||0) : (bv||0)-(av||0);
+  });
+
+  document.getElementById('monthsCount').textContent = `${months.length} month${months.length!==1?'s':''}`;
+
+  const cols = ['monthKey','emailCount','filteredCount','avgOpenRate','avgClickRate','totalOkupdrs','totalSets','totalCloses','closeRate'];
+  document.querySelectorAll('#monthsTable thead th').forEach((th,i)=>{
+    th.className = monthsSortCol===cols[i] ? (monthsSortAsc?'sorted-asc':'sorted-desc') : '';
+  });
+
+  document.getElementById('monthsTableBody').innerHTML = months.map(m=>`<tr>
+    <td><span class="month-link" onclick="drillMonth('${m.monthKey}')">${m.monthName}</span></td>
+    <td class="num">${m.emailCount}</td>
+    <td class="num">${m.filteredCount}</td>
+    <td class="pct">${fmtPct(m.avgOpenRate)}</td>
+    <td class="pct">${fmtPct(m.avgClickRate)}</td>
+    <td class="num">${ocupdrBadge(m.totalOkupdrs)}</td>
+    <td class="num">${numBadge(m.totalSets,'blue')}</td>
+    <td class="num">${numBadge(m.totalCloses,'closes')}</td>
+    <td class="pct">${m.totalOkupdrs>0 ? (m.closeRate*100).toFixed(1)+'%' : '—'}</td>
+  </tr>`).join('') || noDataRow(9);
+}
+
+async function drillMonth(monthKey) {
+  const emails = await dbGetByMonthKey(monthKey);
+  const sec = document.getElementById('monthDetailSection');
+  const title = document.getElementById('monthDetailTitle');
+  title.textContent = monthKeyToName(monthKey) + ' — ' + emails.length + ' emails';
+  sec.style.display = '';
+  sec.scrollIntoView({behavior:'smooth',block:'start'});
+
+  const thead = document.querySelector('#monthDetailTable thead');
+  const tbody = document.querySelector('#monthDetailTable tbody');
+  thead.innerHTML = `<tr><th>Date</th><th>Type</th><th>Subject Line</th><th class="num">Open</th><th class="num">Click</th><th class="num">OKUPDRs</th><th class="num">Sets</th><th class="num">Closes</th></tr>`;
+  const sorted = [...emails].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  tbody.innerHTML = sorted.map(e=>`<tr>
+    <td>${e.date||''}</td>
+    <td class="tag">${typePill(e.type)}</td>
+    <td class="subject">${dripLink(e.dripId,e.subject)}</td>
+    <td class="pct">${fmtPct(e.openRate)}</td>
+    <td class="pct">${fmtPct(e.clickRate)}</td>
+    <td class="num">${ocupdrBadge(e.okupdrs)}</td>
+    <td class="num">${numBadge(e.sets,'blue')}</td>
+    <td class="num">${numBadge(e.closes,'closes')}</td>
+  </tr>`).join('') || noDataRow(8);
+
+  goTab('months');
+}
+
+function closeMonthDetail() {
+  document.getElementById('monthDetailSection').style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════
+// DISCOVER TAB
+// ═══════════════════════════════════════════════
+let discoverPage = 0;
+const DISCOVER_PAGE_SIZE = 100;
+
+function renderDiscoverFilters() {
+  if (!cache.emails.length) return;
+  const years = [...new Set(cache.emails.map(e=>e.year))].sort();
+  const types = [...new Set(cache.emails.map(e=>e.type).filter(Boolean))].sort();
+
+  const yf = document.getElementById('discoverYear');
+  const tf = document.getElementById('discoverType');
+  const mf = document.getElementById('discoverMonth');
+  const curY = yf.value, curT = tf.value;
+  yf.innerHTML = '<option value="">All Years</option>' + years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  tf.innerHTML = '<option value="">All Types</option>' + types.map(t=>`<option value="${t}">${t}</option>`).join('');
+  mf.innerHTML = '<option value="">All Months</option>' + MONTH_NAMES.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
+  if (yf.querySelector(`option[value="${curY}"]`)) yf.value = curY;
+  if (tf.querySelector(`option[value="${curT}"]`)) tf.value = curT;
+}
+
+function getDiscoverFiltered() {
+  const search = document.getElementById('discoverSearch').value.toLowerCase();
+  const year = document.getElementById('discoverYear').value;
+  const month = document.getElementById('discoverMonth').value;
+  const type = document.getElementById('discoverType').value;
+  const sort = document.getElementById('discoverSort').value;
+  const minOk = parseFloat(document.getElementById('discoverMinOkupdrs').value)||0;
+  const minCl = parseFloat(document.getElementById('discoverMinCloses').value)||0;
+  const exclFiltered = document.getElementById('discoverExcludeFiltered').checked;
+
+  let emails = cache.emails.filter(e => {
+    if (search && !e.subject?.toLowerCase().includes(search)) return false;
+    if (year && e.year != year) return false;
+    if (month && e.month != month) return false;
+    if (type && e.type !== type) return false;
+    if (minOk > 0 && (e.okupdrs||0) < minOk) return false;
+    if (minCl > 0 && (e.closes||0) < minCl) return false;
+    if (exclFiltered && e.excluded) return false;
+    return true;
+  });
+
+  const [sField, sDir] = sort.split('_');
+  const fieldMap = {date:'date',okupdrs:'okupdrs',closes:'closes',sets:'sets',open:'openRate',click:'clickRate'};
+  const f = fieldMap[sField];
+  emails.sort((a,b)=>{
+    if (f==='date') return sDir==='asc'?(a.date||'').localeCompare(b.date||''):(b.date||'').localeCompare(a.date||'');
+    return sDir==='asc'?((a[f]||0)-(b[f]||0)):((b[f]||0)-(a[f]||0));
+  });
+  return emails;
+}
+
+function renderDiscoverTable(resetPage) {
+  if (resetPage !== false) discoverPage = 0; // reset pagination on any filter change
+  const hasData = cache.emails.length > 0;
+  document.getElementById('discover-empty').style.display = hasData ? 'none' : '';
+  document.getElementById('discover-content').style.display = hasData ? '' : 'none';
+  if (!hasData) return;
+
+  const filtered = getDiscoverFiltered();
+  document.getElementById('discoverCount').textContent = `${filtered.length.toLocaleString()} emails`;
+
+  const page = filtered.slice(discoverPage * DISCOVER_PAGE_SIZE, (discoverPage+1)*DISCOVER_PAGE_SIZE);
+  document.getElementById('discoverTableBody').innerHTML = page.map(e=>{
+    const isTop = (e.okupdrs||0) >= 11 || (e.closes||0) >= 2;
+    const rowStyle = isTop ? 'background:rgba(16,185,129,.04)' : '';
+    return `<tr style="${rowStyle}">
+    <td>${e.monthName||e.monthKey}</td>
+    <td>${e.date||''}</td>
+    <td class="tag">${typePill(e.type)}</td>
+    <td class="subject">${dripLink(e.dripId,e.subject)}${isTop?'&nbsp;<span title="Top Performer — consider repeating" style="font-size:10px;color:var(--green)">⭐ repeat</span>':''}</td>
+    <td class="pct">${fmtPct(e.openRate)}</td>
+    <td class="pct">${fmtPct(e.clickRate)}</td>
+    <td class="num">${ocupdrBadge(e.okupdrs)}</td>
+    <td class="num">${numBadge(e.sets,'blue')}</td>
+    <td class="num">${numBadge(e.closes,'closes')}</td>
+    <td>${e.dripId ? `<a href="${DRIP_LINK(e.dripId)}" target="_blank" style="font-size:11px;color:var(--accent2)">View ↗</a>` : '—'}</td>
+  </tr>`;}).join('') || `<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--text3);font-style:italic">No emails match the current filters</td></tr>`;
+
+  // Pagination
+  const totalPages = Math.ceil(filtered.length / DISCOVER_PAGE_SIZE);
+  const pager = document.getElementById('discoverPager');
+  if (totalPages <= 1) { pager.innerHTML = ''; return; }
+  let pages = '';
+  for (let i=0; i<totalPages; i++) {
+    pages += `<button onclick="discoverPage=${i};renderDiscoverTable(false)" style="padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:${i===discoverPage?'var(--accent)':'var(--bg3)'};color:${i===discoverPage?'#fff':'var(--text2)'};cursor:pointer;font-size:11px">${i+1}</button>`;
+  }
+  pager.innerHTML = `<span>Page ${discoverPage+1} of ${totalPages}</span>${pages}`;
+}
+
+// ═══════════════════════════════════════════════
+// IMPORT MONTH WORKFLOW
+// ═══════════════════════════════════════════════
+let importState = { drip: null, lastTouch: null, processed: null, monthName: '' };
+
+// ── xlsx helpers for import ────────────────────────────────────────────────
+
+// Convert an xlsx sheet to an array of row-objects using the first header row found
+function xlsxSheetToObjects(sheet) {
+  const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null, raw: false });
+  // Find first row that looks like a header (has at least 2 non-empty strings)
+  let headerIdx = -1;
+  for (let i = 0; i < Math.min(8, rows.length); i++) {
+    const r = rows[i] || [];
+    const nonEmpty = r.filter(c => c !== null && String(c).trim() !== '');
+    if (nonEmpty.length >= 2) { headerIdx = i; break; }
+  }
+  if (headerIdx < 0) return [];
+  const headers = (rows[headerIdx] || []).map(c => String(c ?? '').trim());
+  const result = [];
+  for (let i = headerIdx + 1; i < rows.length; i++) {
+    const row = rows[i] || [];
+    if (row.every(c => c === null || c === '')) continue;
+    const obj = {};
+    headers.forEach((h, j) => { if (h) obj[h] = row[j] ?? null; });
+    result.push(obj);
+  }
+  return result;
+}
+
+// Find the Drip metrics sheet inside a workbook
+// Looks for columns: id, strategy_name, email_subject, sent_at
+function extractDripSheet(wb) {
+  for (const shName of wb.SheetNames) {
+    const n = shName.toLowerCase();
+    // Skip known non-drip sheets
+    if (n.includes('last touch') || n.includes('overview') || n.includes('format')) continue;
+    const rows = xlsxSheetToObjects(wb.Sheets[shName]);
+    if (!rows.length) continue;
+    const keys = Object.keys(rows[0]).map(k => k.toLowerCase());
+    if (keys.some(k => k.includes('strategy_name') || k.includes('strategy name')) &&
+        keys.some(k => k === 'id' || k.includes('broadcast'))) {
+      return { rows, sheetName: shName };
+    }
+    // Also accept if it has sent_at and email_subject
+    if (keys.some(k => k.includes('sent_at') || k.includes('sent at')) &&
+        keys.some(k => k.includes('subject'))) {
+      return { rows, sheetName: shName };
+    }
+  }
+  return null;
+}
+
+// Find the Last Touch attribution sheet
+// Looks for "Last Marketing Term" column + OKUPDR/Converted columns
+function extractLastTouchSheet(wb) {
+  for (const shName of wb.SheetNames) {
+    const n = shName.toLowerCase();
+    const sheet = wb.Sheets[shName];
+    const allRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null, raw: false });
+
+    // Scan all rows for one that contains "last marketing term"
+    for (let ri = 0; ri < Math.min(15, allRows.length); ri++) {
+      const row = allRows[ri] || [];
+      const rowStr = row.map(c => String(c ?? '').toLowerCase()).join('|');
+      if (rowStr.includes('last marketing term')) {
+        // Use this row as the header
+        const headers = row.map(c => String(c ?? '').trim());
+        const result = [];
+        for (let r = ri + 1; r < allRows.length; r++) {
+          const dataRow = allRows[r] || [];
+          if (dataRow.every(c => c === null || c === '')) continue;
+          const obj = {};
+          headers.forEach((h, j) => { if (h) obj[h] = dataRow[j] ?? null; });
+          result.push(obj);
+        }
+        if (result.length > 0) return { rows: result, sheetName: shName };
+      }
+    }
+  }
+  return null;
+}
+
+// Set one side of the import UI
+function setImportSide(type, rows, filename) {
+  if (type === 'drip') {
+    importState.drip = rows;
+    const el = document.getElementById('dzDripName');
+    el.textContent = filename; el.style.display = '';
+    document.getElementById('dzDrip').classList.add('loaded');
+    document.getElementById('dripPreviewStats').textContent = `✅ ${rows.length} emails loaded`;
+  } else {
+    importState.lastTouch = rows;
+    const el = document.getElementById('dzLastTouchName');
+    el.textContent = filename; el.style.display = '';
+    document.getElementById('dzLastTouch').classList.add('loaded');
+    document.getElementById('lastTouchPreviewStats').textContent = `✅ ${rows.length} attribution records loaded`;
+  }
+}
+
+// ── Main import handler ────────────────────────────────────────────────────
+
+async function handleImportFile(input, type) {
+  const file = input.files[0];
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  if (ext === 'xlsx' || ext === 'xls') {
+    // Read as xlsx
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array', cellDates: false });
+
+    // Try to extract both Drip and Last Touch from this one file (combined xlsx)
+    const dripResult = extractDripSheet(wb);
+    const ltResult   = extractLastTouchSheet(wb);
+
+    let populated = 0;
+
+    if (dripResult) {
+      setImportSide('drip', dripResult.rows, `${file.name} → ${dripResult.sheetName}`);
+      populated++;
+    }
+    if (ltResult) {
+      setImportSide('lasttouch', ltResult.rows, `${file.name} → ${ltResult.sheetName}`);
+      populated++;
+    }
+
+    if (populated === 0) {
+      // Fallback: try to treat the first sheet as whatever type was requested
+      const fallback = xlsxSheetToObjects(wb.Sheets[wb.SheetNames[0]]);
+      if (fallback.length) {
+        setImportSide(type, fallback, file.name);
+        toast(`Loaded ${fallback.length} rows from first sheet — verify columns look right`, 'info');
+      } else {
+        toast(`Could not find ${type === 'drip' ? 'Drip metrics' : 'Last Touch'} data in ${file.name}`, 'error');
+      }
+    } else if (populated === 2) {
+      toast(`Auto-detected both Drip + Last Touch sheets in ${file.name}`, 'success');
+    }
+  } else {
+    // CSV path (original)
+    const reader = new FileReader();
+    reader.onload = e => {
+      Papa.parse(e.target.result, {
+        header: true, skipEmptyLines: true,
+        complete: results => {
+          setImportSide(type, results.data, file.name);
+          checkImportReady();
+        }
+      });
+    };
+    reader.readAsText(file);
+    return; // checkImportReady called inside complete callback
+  }
+
+  checkImportReady();
+}
+
+function checkImportReady() {
+  const ready = importState.drip && importState.lastTouch;
+  document.getElementById('processBtn').disabled = !ready;
+  document.getElementById('processStatus').textContent = ready ?
+    'Both files loaded. Click Process Month to generate the reports.' :
+    `Need: ${!importState.drip?'Drip CSV':''}${!importState.drip&&!importState.lastTouch?' + ':''}${!importState.lastTouch?'Last Touch CSV':''}`;
+}
+
+function processImport() {
+  const drip = importState.drip;
+  const lt = importState.lastTouch;
+  if (!drip || !lt) return;
+
+  // Build last-touch lookup: normalized strategy name → {okupdrs, sets, closes}
+  const ltMap = {};
+  for (const row of lt) {
+    const term = normalizeStrategy(
+      row['Last Marketing Term'] || row['last marketing term'] || row['Last_Marketing_Term'] || ''
+    );
+    if (!term) continue;
+    ltMap[term] = {
+      okupdrs: parseNum(row['Sum of OKUPDR?'] || row['sum of okupdr?'] || row['Sum_of_OKUPDR'] || null),
+      sets: parseNum(row['Sum of Demo was Set'] || row['Sum of Demo Set'] || row['sum of demo was set'] || null),
+      closes: parseNum(row['Sum of Converted'] || row['sum of converted'] || row['Sum_of_Converted'] || null),
+    };
+  }
+
+  // Process each Drip email
+  const allRows = drip.map(row => {
+    const id = String(row['id'] || '').trim();
+    const stratRaw = String(row['strategy_name'] || '').trim();
+    const subject = String(row['email_subject'] || row['subject'] || '').trim();
+    const sentAt = String(row['sent_at'] || '').trim();
+    const openRate = parsePct(row['open_rate'] || null);
+    const clickRate = parsePct(row['click_through_rate'] || row['click_rate'] || null);
+
+    // Match to last-touch data
+    const normStrat = normalizeStrategy(stratRaw);
+    const ltData = ltMap[normStrat] || null;
+
+    const excluded = shouldExclude(stratRaw, subject);
+    const dateStr = parseDate(sentAt);
+    const monthKey = dateToMonthKey(dateStr);
+
+    return {
+      id, strategyName: stratRaw, subject, date: dateStr, monthKey,
+      openRate, clickRate,
+      okupdrs: ltData ? ltData.okupdrs : null,
+      sets: ltData ? ltData.sets : null,
+      closes: ltData ? ltData.closes : null,
+      hasAttribution: ltData !== null,
+      excluded
+    };
+  }).filter(r => r.date); // remove rows with no date
+
+  allRows.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+
+  // Detect month name from data
+  if (allRows.length > 0 && allRows[0].monthKey) {
+    importState.monthName = monthKeyToName(allRows[0].monthKey);
+  }
+  importState.processed = allRows;
+
+  // Render previews
+  renderImportPreview(allRows);
+  document.getElementById('importPreviewArea').style.display = '';
+  document.getElementById('processStatus').textContent = `✅ Processed ${allRows.length} emails. ${allRows.filter(r=>!r.excluded).length} in filtered report.`;
+}
+
+function renderImportPreview(rows) {
+  const filtered = rows.filter(r => !r.excluded);
+  const full = rows;
+
+  // Stats
+  document.getElementById('prevFilteredStats').innerHTML = `
+    <strong>${filtered.length}</strong> emails &nbsp;·&nbsp;
+    <strong>${filtered.filter(r=>r.hasAttribution).length}</strong> with attribution &nbsp;·&nbsp;
+    Removed ${rows.length - filtered.length} intl/demo/consulting
+  `;
+  document.getElementById('prevFullStats').innerHTML = `<strong>${full.length}</strong> total emails`;
+
+  renderPreviewTable('prevFilteredHead','prevFilteredBody',filtered);
+  renderPreviewTable('prevFullHead','prevFullBody',full);
+}
+
+function renderPreviewTable(headId, bodyId, rows) {
+  document.getElementById(headId).innerHTML = `<tr><th>Date</th><th>Subject Line</th><th class="num">Open</th><th class="num">Click</th><th class="num">OKUPDRs</th><th class="num">Sets</th><th class="num">Closes</th><th>Attribution</th></tr>`;
+  document.getElementById(bodyId).innerHTML = rows.map(r=>`<tr>
+    <td>${r.date||''}</td>
+    <td class="subject">${dripLink(r.id,r.subject)}</td>
+    <td class="pct">${fmtPct(r.openRate)}</td>
+    <td class="pct">${fmtPct(r.clickRate)}</td>
+    <td class="num">${ocupdrBadge(r.okupdrs)}</td>
+    <td class="num">${numBadge(r.sets,'blue')}</td>
+    <td class="num">${numBadge(r.closes,'closes')}</td>
+    <td>${r.hasAttribution ? '<span class="match-yes">✓ matched</span>' : '<span class="match-no">—</span>'}</td>
+  </tr>`).join('') || noDataRow(8);
+}
+
+// ═══════════════════════════════════════════════
+// EXPORT CSVs (with Excel HYPERLINK formula)
+// ═══════════════════════════════════════════════
+function buildCsvRows(rows) {
+  const header = ['Date Sent','Subject Line','Open Rate','Click Rate','OKUPDRs','Sets','Closes'];
+  const dataRows = rows.map(r => {
+    const dateFmt = r.date || '';
+    const dateCell = r.id
+      ? `=HYPERLINK("${DRIP_LINK(r.id)}","${dateFmt}")`
+      : dateFmt;
+    const ok = r.okupdrs !== null ? r.okupdrs : '';
+    const st = r.sets !== null ? r.sets : '';
+    const cl = r.closes !== null ? r.closes : '';
+    return [
+      dateCell,
+      r.subject || '',
+      r.openRate !== null ? (r.openRate*100).toFixed(2)+'%' : '',
+      r.clickRate !== null ? (r.clickRate*100).toFixed(2)+'%' : '',
+      ok, st, cl
+    ];
+  });
+  return [header, ...dataRows];
+}
+
+function csvEscape(val) {
+  const s = String(val ?? '');
+  if (s.includes(',') || s.includes('"') || s.includes('\n') || s.startsWith('=')) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+
+function downloadCsv(rows, filename) {
+  const csv = rows.map(r => r.map(csvEscape).join(',')).join('\r\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportFilteredCSV() {
+  if (!importState.processed) return;
+  const rows = importState.processed.filter(r=>!r.excluded);
+  downloadCsv(buildCsvRows(rows), `${importState.monthName} Email Overview.csv`);
+  toast('Filtered CSV downloaded','success');
+}
+
+function exportFullCSV() {
+  if (!importState.processed) return;
+  downloadCsv(buildCsvRows(importState.processed), `${importState.monthName} Email Overview - Full Report.csv`);
+  toast('Full CSV downloaded','success');
+}
+
+async function saveMonthToDb() {
+  if (!importState.processed) return;
+  const emails = importState.processed.map(r => ({
+    monthKey: r.monthKey,
+    monthName: monthKeyToName(r.monthKey),
+    year: r.monthKey ? parseInt(r.monthKey.slice(0,4),10) : null,
+    month: r.monthKey ? parseInt(r.monthKey.slice(5,7),10) : null,
+    date: r.date,
+    type: '', resend: false,
+    subject: r.subject,
+    openRate: r.openRate, clickRate: r.clickRate,
+    okupdrs: r.okupdrs, sets: r.sets, closes: r.closes,
+    note: '',
+    strategyName: r.strategyName,
+    dripId: r.id,
+    excluded: r.excluded
+  }));
+  await saveEmailsAndMeta(emails);
+  await refreshAll();
+  toast(`${importState.monthName} saved to database (${emails.length} emails)`, 'success');
+  document.getElementById('saveMonthBtn').disabled = true;
+  document.getElementById('saveMonthBtn').textContent = '✅ Saved to Database';
+}
+
+// ═══════════════════════════════════════════════
+// LOAD HISTORY (Main XLSX import — supports multiple files)
+// ═══════════════════════════════════════════════
+async function handleHistoryFiles(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+
+  const dzName = document.getElementById('dzHistoryName');
+  dzName.textContent = files.length === 1 ? files[0].name : `${files.length} files selected`;
+  dzName.style.display = '';
+  document.getElementById('dzHistory').classList.add('loaded');
+
+  const progress = document.getElementById('historyProgress');
+  const progressText = document.getElementById('historyProgressText');
+  const progressFill = document.getElementById('historyProgressFill');
+  const result = document.getElementById('historyResult');
+  progress.style.display = ''; result.style.display = 'none';
+
+  let totalEmails = 0, totalMonths = 0;
+  const errors = [];
+
+  for (let fi = 0; fi < files.length; fi++) {
+    const file = files[fi];
+    progressText.textContent = `Reading ${file.name} (${fi+1}/${files.length})...`;
+    progressFill.style.width = ((fi / files.length) * 80) + '%';
+
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type:'array', cellDates: false });
+      const emails = parseMainWorkbook(wb, (shName, pct) => {
+        const base = (fi / files.length) * 80;
+        progressFill.style.width = (base + pct * (80/files.length)) + '%';
+        progressText.textContent = `${file.name} → ${shName}`;
+      });
+      if (emails.length > 0) {
+        await saveEmailsAndMeta(emails);
+        const months = [...new Set(emails.map(e=>e.monthKey))].length;
+        totalEmails += emails.length;
+        totalMonths += months;
+      }
+    } catch(err) {
+      errors.push(`${file.name}: ${err.message}`);
+    }
+  }
+
+  progressFill.style.width = '100%';
+  progressText.textContent = 'Done!';
+  await refreshAll();
+
+  result.style.display = '';
+  if (errors.length === 0) {
+    result.style.background = 'var(--greenBg)';
+    result.style.borderColor = 'var(--green)';
+    result.style.color = 'var(--green)';
+    result.textContent = `✅ Imported ${totalEmails.toLocaleString()} emails across ${totalMonths} months from ${files.length} file${files.length>1?'s':''}.`;
+    toast(`Imported ${totalEmails.toLocaleString()} emails from ${totalMonths} months`, 'success');
+  } else {
+    result.style.background = 'var(--redBg)';
+    result.style.borderColor = 'var(--red)';
+    result.style.color = 'var(--red)';
+    result.innerHTML = `Imported ${totalEmails.toLocaleString()} emails. Errors:<br>` + errors.map(e=>`• ${e}`).join('<br>');
+  }
+}
+
+// Keep backward compat for ondrop handler
+function handleHistoryFile(input) { handleHistoryFiles(input); }
+
+// ═══════════════════════════════════════════════
+// DRAG & DROP
+// ═══════════════════════════════════════════════
+function dzOver(e, id) { e.preventDefault(); document.getElementById(id).classList.add('drag-over'); }
+function dzLeave(id) { document.getElementById(id).classList.remove('drag-over'); }
+function dzDrop(e, id, type) {
+  e.preventDefault();
+  document.getElementById(id).classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  if (type === 'history') {
+    const input = document.getElementById('fileHistory');
+    const dt = new DataTransfer();
+    Array.from(e.dataTransfer.files).forEach(f => dt.items.add(f));
+    input.files = dt.files;
+    handleHistoryFiles(input);
+  } else {
+    const inputId = type === 'drip' ? 'fileDrip' : 'fileLastTouch';
+    const input = document.getElementById(inputId);
+    const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files;
+    handleImportFile(input, type);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════════
+function showLoadHistoryModal() {
+  document.getElementById('loadHistoryModal').classList.add('active');
+}
+function closeModal() {
+  document.getElementById('loadHistoryModal').classList.remove('active');
+}
+
+async function clearDatabase() {
+  if (!confirm('Clear ALL data from the database? This cannot be undone.')) return;
+  await dbClear('emails');
+  await dbClear('months');
+  await refreshAll();
+  toast('Database cleared', 'info');
+  closeModal();
+}
+
+async function resyncFromSeed() {
+  const seed = window.ASF_HISTORY_SEED;
+  if (!seed || !seed.emails || !seed.emails.length) {
+    toast('No history file loaded. Run generate-history.py first, then refresh the page.', 'error');
+    return;
+  }
+  if (!confirm(`This will clear the database and re-import ${seed.emailCount.toLocaleString()} emails from the history file. New months you have added via Import Month will be lost unless they are in the history file.\n\nContinue?`)) return;
+  await dbClear('emails');
+  await dbClear('months');
+  const BATCH = 500;
+  for (let i = 0; i < seed.emails.length; i += BATCH) {
+    for (const e of seed.emails.slice(i, i + BATCH)) await dbPut('emails', e);
+  }
+  for (const m of seed.months) await dbPut('months', m);
+  await refreshAll();
+  toast(`✅ Re-synced ${seed.emailCount.toLocaleString()} emails from history file`, 'success');
+  closeModal();
+}
+
+// ═══════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════
+function ocupdrBadge(v) {
+  if (v === null || v === undefined) return '<span class="badge badge-gray">—</span>';
+  const n = parseFloat(v);
+  if (isNaN(n)) return '<span class="badge badge-gray">—</span>';
+  if (n <= 5) return `<span class="badge badge-red">${n}</span>`;
+  if (n <= 10) return `<span class="badge badge-yellow">${n}</span>`;
+  if (n <= 20) return `<span class="badge badge-green">${n}</span>`;
+  return `<span class="badge badge-purple">${n}</span>`;
+}
+
+function numBadge(v, color) {
+  if (v === null || v === undefined) return '<span class="badge badge-gray">—</span>';
+  const n = parseFloat(v);
+  if (isNaN(n)) return '<span class="badge badge-gray">—</span>';
+  return `<span class="badge badge-${color}">${n}</span>`;
+}
+
+function typePill(type) {
+  if (!type) return '';
+  const t = String(type).trim();
+  const cls = t.startsWith('Thought') ? 'type-Thought' : `type-${t}`;
+  return `<span class="type-pill ${cls}">${t}</span>`;
+}
+
+function dripLink(id, subject) {
+  const s = subject || '(no subject)';
+  if (id) return `<a href="${DRIP_LINK(id)}" target="_blank" title="Open in Drip">${escHtml(s)}</a>`;
+  return escHtml(s);
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function noDataRow(cols) {
+  return `<tr class="no-data-row"><td colspan="${cols}">No data</td></tr>`;
+}
+
+function toast(msg, type='info') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`; t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(()=>t.remove(),400); }, 4000);
+}
+
+// ═══════════════════════════════════════════════
+// SEED IMPORT (from asf-history-data.js)
+// ═══════════════════════════════════════════════
+async function importSeedData() {
+  const seed = window.ASF_HISTORY_SEED;
+  if (!seed || !seed.emails || !seed.emails.length) return false;
+
+  // Only seed if DB is empty
+  const existing = await dbGetAll('months');
+  if (existing.length > 0) return false;
+
+  toast(`Importing ${seed.emailCount.toLocaleString()} emails from history…`, 'info');
+
+  // Save emails in batches for performance
+  const BATCH = 500;
+  for (let i = 0; i < seed.emails.length; i += BATCH) {
+    const batch = seed.emails.slice(i, i + BATCH);
+    for (const e of batch) await dbPut('emails', e);
+  }
+  // Save pre-computed month meta directly
+  for (const m of seed.months) await dbPut('months', m);
+
+  return true;
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+(async () => {
+  try {
+    await openDB();
+    const seeded = await importSeedData();
+    await refreshAll();
+    if (seeded) {
+      const seed = window.ASF_HISTORY_SEED;
+      toast(`✅ Loaded ${seed.emailCount.toLocaleString()} emails across ${seed.monthCount} months`, 'success');
+    }
+  } catch(err) {
+    console.error('DB init error:', err);
+    toast('Could not open database: ' + err.message, 'error');
+  }
+})();
+</script>
+</body>
+</html>
